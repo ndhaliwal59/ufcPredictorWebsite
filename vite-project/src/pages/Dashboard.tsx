@@ -1,3 +1,4 @@
+// Dashboard.tsx
 import React, { useState } from 'react';
 import { Event, Match } from '../types';
 import EventForm from '../components/EventForm';
@@ -6,10 +7,11 @@ import EventCard from '../components/EventCard';
 const Dashboard: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
 
-  const handleAddEvent = (eventName: string) => {
+  const handleAddEvent = (eventName: string, eventDate: string) => {
     const newEvent: Event = {
       id: crypto.randomUUID(),
       name: eventName,
+      date: eventDate,
       matches: [],
     };
     setEvents(prev => [...prev, newEvent]);

@@ -1,8 +1,11 @@
+// LoginForm.tsx
 import React, { useState } from 'react';
 import { useLocation } from 'wouter';
+import { useAuth } from '../contexts/AuthContext'; // Add this import
 
 const LoginForm: React.FC = () => {
   const [, setLocation] = useLocation();
+  const { login } = useAuth(); // Use AuthContext
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -16,26 +19,14 @@ const LoginForm: React.FC = () => {
     const password = formData.get('password') as string;
 
     try {
-      const response = await fetch('http://localhost:8000/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          username,
-          password,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Store token in localStorage
-        localStorage.setItem('access_token', data.access_token);
+      // Use AuthContext login instead of direct fetch
+      const success = await login(username, password);
+      
+      if (success) {
         // Redirect to dashboard
         setLocation('/dashboard');
       } else {
-        const errorData = await response.json();
-        setError(errorData.detail || 'Login failed');
+        setError('Login failed');
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -83,8 +74,18 @@ const LoginForm: React.FC = () => {
           </div>
         </div>
 
-        <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          Sign In
+        {error && (
+          <div className="text-red-400 text-sm text-center">
+            {error}
+          </div>
+        )}
+
+        <button 
+          type="submit" 
+          disabled={isLoading}
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {isLoading ? 'Signing In...' : 'Sign In'}
         </button>
       </form>
     </div>

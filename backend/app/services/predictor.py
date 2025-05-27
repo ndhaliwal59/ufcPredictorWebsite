@@ -1,11 +1,16 @@
 from typing import Dict, List, Any, Optional
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import base64
+import io
+import shap
+import json
 from pathlib import Path
 from app.core.globals import get_model, get_dataset, get_cached_data
 
 class UFCPredictor:
-    """Service class for UFC fight predictions using your optimized prediction logic."""
+    """Service class for UFC fight predictions using your optimized prediction logic with SHAP visualization."""
     
     def __init__(self):
         # Get models and datasets from global state
@@ -219,7 +224,7 @@ class UFCPredictor:
         p1_method_wins = self.calculate_method_wins(p1, include_method_features)
         p2_method_wins = self.calculate_method_wins(p2, include_method_features)
 
-        # Build feature dictionary (same as your original code)
+        # Build feature dictionary
         feature_dict = {
             'winner': np.nan,
             
@@ -300,23 +305,38 @@ class UFCPredictor:
         return pd.DataFrame([feature_dict])
     
     def validate_features(self, input_features, target_model):
-        """Validate features for method prediction models"""
-        # For now, assume all features are available - you may need to add the JSON files
-        # or implement feature selection logic based on your model requirements
+        """Validate features for method prediction models using exact 50 features"""
         try:
             feature_file_path = Path(f"data/{target_model}_features.json")
-            if feature_file_path.exists():
-                required_features = pd.read_json(feature_file_path, typ='series').tolist()
-                missing = [f for f in required_features if f not in input_features]
-                if missing:
-                    raise ValueError(f"Missing required features: {missing}")
-                return input_features[required_features]
-            else:
-                # Fallback: return all available features
-                return input_features.drop(columns=['winner'], errors='ignore')
+            
+            if not feature_file_path.exists():
+                raise FileNotFoundError(f"Feature file not found: {feature_file_path}")
+            
+            # Load the required features from JSON
+            with open(feature_file_path, 'r') as f:
+                feature_data = json.load(f)
+                # Handle both dict and list formats
+                if isinstance(feature_data, dict):
+                    required_features = list(feature_data.keys())
+                else:
+                    required_features = feature_data
+            
+            print(f"Loaded {len(required_features)} features for {target_model}")
+            
+            # Check for missing features
+            missing = [f for f in required_features if f not in input_features.columns]
+            if missing:
+                print(f"Missing features: {missing[:5]}...")  # Show first 5
+                raise ValueError(f"Missing {len(missing)} required features for {target_model}")
+            
+            # Return only the required features in the correct order
+            return input_features[required_features]
+            
         except Exception as e:
-            # If validation fails, return all features except winner
-            return input_features.drop(columns=['winner'], errors='ignore')
+            print(f"Error in validate_features: {e}")
+            print(f"Feature file path: {feature_file_path}")
+            print(f"File exists: {feature_file_path.exists()}")
+            raise e  # Re-raise instead of falling back
     
     def get_winner_prediction(self, p1, p2, eventDate, ref):
         """Helper function to get winner prediction probabilities"""
@@ -333,23 +353,431 @@ class UFCPredictor:
     
     def get_method_percentages(self, p1, p2, eventDate, ref):
         """Helper function to get method-specific percentages"""
-        fight_features = self.getData(p1, p2, eventDate, ref, include_method_features=True)
-        
-        p1_features = self.validate_features(fight_features, 'p1_method_target')
-        p2_features = self.validate_features(fight_features, 'p2_method_target')
-        
-        p1_probs = self.p1_model.predict_proba(p1_features).flatten()
-        p2_probs = self.p2_model.predict_proba(p2_features).flatten()
-        
-        class_names = ['Decision', 'KO/TKO', 'Submission']
-        
-        p1_methods_sorted = sorted(zip(class_names, p1_probs * 100), key=lambda x: x[1], reverse=True)
-        p2_methods_sorted = sorted(zip(class_names, p2_probs * 100), key=lambda x: x[1], reverse=True)
-        
-        p1_method_percentages = [f"{method}: {percent:.1f}%" for method, percent in p1_methods_sorted]
-        p2_method_percentages = [f"{method}: {percent:.1f}%" for method, percent in p2_methods_sorted]
-        
-        return p1_method_percentages, p2_method_percentages
+        try:
+            fight_features = self.getData(p1, p2, eventDate, ref, include_method_features=True)
+            
+            print(f"Generated features shape: {fight_features.shape}")
+            print(f"Feature columns: {len(fight_features.columns)}")
+            
+            # Validate features for both models
+            p1_features = self.validate_features(fight_features, 'p1_method')
+            p2_features = self.validate_features(fight_features, 'p2_method')
+            
+            print(f"P1 features after validation: {p1_features.shape}")
+            print(f"P2 features after validation: {p2_features.shape}")
+            
+            # Make predictions
+            p1_probs = self.p1_model.predict_proba(p1_features).flatten()
+            p2_probs = self.p2_model.predict_proba(p2_features).flatten()
+            
+            class_names = ['Decision', 'KO/TKO', 'Submission']
+            
+            p1_methods_sorted = sorted(zip(class_names, p1_probs * 100), key=lambda x: x[1], reverse=True)
+            p2_methods_sorted = sorted(zip(class_names, p2_probs * 100), key=lambda x: x[1], reverse=True)
+            
+            p1_method_percentages = [f"{method}: {percent:.1f}%" for method, percent in p1_methods_sorted]
+            p2_method_percentages = [f"{method}: {percent:.1f}%" for method, percent in p2_methods_sorted]
+            
+            return p1_method_percentages, p2_method_percentages
+            
+        except Exception as e:
+            print(f"Error in get_method_percentages: {e}")
+            raise e
+    
+    def create_optimized_shap_visualization_base64(self, p1_name, p2_name, event_date, referee):
+        """
+        Creates your optimized SHAP visualization and returns as base64 string for React frontend
+        """
+        try:
+            fight_data = self.getData(p1_name, p2_name, event_date, referee, include_method_features=False)
+            fight_features = fight_data.drop(columns=['winner']).astype(float)
+            fight_features_reordered = self.reorder_features_to_model(self.loaded_model, fight_features)
+            
+            # Get SHAP values
+            explainer = shap.Explainer(self.loaded_model)
+            shap_explanation = explainer(fight_features_reordered)
+            single_explanation = shap_explanation[0]
+
+            if hasattr(single_explanation.values, 'shape') and len(single_explanation.values.shape) > 1:
+                shap_values = single_explanation.values[:, 1]
+            else:
+                shap_values = single_explanation.values
+            
+            # INCREASED THRESHOLD to filter out very small impact features
+            MIN_THRESHOLD = 0.025
+            
+            # Create feature mapping for combining p1/p2 stats
+            combined_features = {}
+            other_features = []
+            other_shap_sum = 0
+            processed_features = set()
+            
+            # Define stat categories to combine
+            stat_categories = {
+                'slpm': 'Striking Volume',
+                'str_acc': 'Striking Accuracy', 
+                'sapm': 'Striking Absorbed',
+                'str_def': 'Striking Defense',
+                'td_avg': 'Takedown Average',
+                'td_acc': 'Takedown Accuracy',
+                'td_def': 'Takedown Defense',
+                'sub_avg': 'Submission Average',
+                'age_adjusted_str_acc': 'Age Adj Str Accuracy',
+                'age_adjusted_str_def': 'Age Adj Str Defense',
+                'age_adjusted_td_acc': 'Age Adj TD Accuracy',
+                'age_adjusted_td_def': 'Age Adj TD Defense',
+                'age_adjusted_sub_avg': 'Age Adj Sub Average'
+            }
+            
+            # Combine p1/p2 stats for Individual Skills
+            for base_stat, display_name in stat_categories.items():
+                p1_col = f'p1_{base_stat}'
+                p2_col = f'p2_{base_stat}'
+                
+                p1_idx = None
+                p2_idx = None
+                
+                for i, col in enumerate(fight_features_reordered.columns):
+                    if col == p1_col:
+                        p1_idx = i
+                    elif col == p2_col:
+                        p2_idx = i
+                
+                if p1_idx is not None and p2_idx is not None:
+                    combined_shap = shap_values[p1_idx] + shap_values[p2_idx]
+                    
+                    if abs(combined_shap) > MIN_THRESHOLD:
+                        p1_val = fight_features_reordered.iloc[0, p1_idx]
+                        p2_val = fight_features_reordered.iloc[0, p2_idx]
+                        
+                        combined_features[display_name] = {
+                            'shap_value': combined_shap,
+                            'p1_value': p1_val,
+                            'p2_value': p2_val,
+                            'category': 'Individual Skills'
+                        }
+                        
+                        processed_features.add(p1_col)
+                        processed_features.add(p2_col)
+            
+            # Combine Physical Attributes
+            physical_combinations = [
+                ('p1_age_at_event', 'p2_age_at_event', 'Age'),
+                ('p1_reach', 'p2_reach', 'Reach'), 
+                ('p1_height', 'p2_height', 'Height'),
+                ('p1_weight', 'p2_weight', 'Weight')
+            ]
+            
+            for p1_col, p2_col, display_name in physical_combinations:
+                p1_idx = None
+                p2_idx = None
+                
+                for i, col in enumerate(fight_features_reordered.columns):
+                    if col == p1_col:
+                        p1_idx = i
+                    elif col == p2_col:
+                        p2_idx = i
+                
+                if p1_idx is not None and p2_idx is not None:
+                    combined_shap = shap_values[p1_idx] + shap_values[p2_idx]
+                    
+                    if abs(combined_shap) > MIN_THRESHOLD:
+                        p1_val = fight_features_reordered.iloc[0, p1_idx]
+                        p2_val = fight_features_reordered.iloc[0, p2_idx]
+                        
+                        combined_features[display_name] = {
+                            'shap_value': combined_shap,
+                            'p1_value': p1_val,
+                            'p2_value': p2_val,
+                            'category': 'Physical Attributes'
+                        }
+                        
+                        processed_features.add(p1_col)
+                        processed_features.add(p2_col)
+            
+            # Combine Experience & Records
+            experience_combinations = [
+                ('p1_wins', 'p2_wins', 'Wins'),
+                ('p1_losses', 'p2_losses', 'Losses'),
+                ('p1_total', 'p2_total', 'Total Fights'),
+                ('p1_win_streak', 'p2_win_streak', 'Win Streak'),
+                ('p1_days_since_last_fight', 'p2_days_since_last_fight', 'Days Since Last Fight')
+            ]
+            
+            for p1_col, p2_col, display_name in experience_combinations:
+                p1_idx = None
+                p2_idx = None
+                
+                for i, col in enumerate(fight_features_reordered.columns):
+                    if col == p1_col:
+                        p1_idx = i
+                    elif col == p2_col:
+                        p2_idx = i
+                
+                if p1_idx is not None and p2_idx is not None:
+                    combined_shap = shap_values[p1_idx] + shap_values[p2_idx]
+                    
+                    if abs(combined_shap) > MIN_THRESHOLD:
+                        p1_val = fight_features_reordered.iloc[0, p1_idx]
+                        p2_val = fight_features_reordered.iloc[0, p2_idx]
+                        
+                        combined_features[display_name] = {
+                            'shap_value': combined_shap,
+                            'p1_value': p1_val,
+                            'p2_value': p2_val,
+                            'category': 'Experience & Records'
+                        }
+                        
+                        processed_features.add(p1_col)
+                        processed_features.add(p2_col)
+            
+            # Process remaining features
+            for i, feature in enumerate(fight_features_reordered.columns):
+                if feature in processed_features:
+                    continue
+                    
+                # Skip excluded features
+                if feature in ['age_diff', 'days_since_last_fight_diff']:
+                    continue
+                
+                shap_val = shap_values[i]
+                if abs(shap_val) > MIN_THRESHOLD:
+                    
+                    # Categorize remaining features
+                    category = 'Other'
+                    if '_diff' in feature:
+                        category = 'Fighter Differences'
+                    elif 'stance_' in feature:
+                        category = 'Fighting Style'
+                    elif feature == 'referee_freq':
+                        category = 'Context & Other'
+                    elif '_ema' in feature:
+                        category = 'Context & Other'
+                    
+                    if category == 'Other' or category == 'Context & Other':
+                        # Sum up miscellaneous features
+                        other_shap_sum += shap_val
+                    else:
+                        clean_name = feature.replace('_diff', ' Difference').replace('_', ' ').title()
+                        clean_name = clean_name.replace('p1 ', f'{p1_name} ').replace('p2 ', f'{p2_name} ')
+                        
+                        other_features.append({
+                            'name': clean_name,
+                            'shap_value': shap_val,
+                            'value': fight_features_reordered.iloc[0, i],
+                            'category': category
+                        })
+            
+            # Group features by category
+            all_features_by_category = {
+                'Fighter Differences': [],
+                'Individual Skills': [],
+                'Physical Attributes': [],
+                'Experience & Records': [],
+                'Fighting Style': [],
+                'Context & Other': []
+            }
+            
+            # Add combined features
+            for name, data in combined_features.items():
+                all_features_by_category[data['category']].append({
+                    'name': name,
+                    'shap_value': data['shap_value'],
+                    'category': data['category'],
+                    'type': 'combined',
+                    'p1_value': data['p1_value'],
+                    'p2_value': data['p2_value']
+                })
+            
+            # Add other features
+            for feature in other_features:
+                all_features_by_category[feature['category']].append({
+                    'name': feature['name'],
+                    'shap_value': feature['shap_value'],
+                    'category': feature['category'],
+                    'type': 'individual'
+                })
+            
+            # Add the combined "Context & Other" bar if meaningful
+            if abs(other_shap_sum) > MIN_THRESHOLD:
+                all_features_by_category['Context & Other'].append({
+                    'name': 'Context & Other',
+                    'shap_value': other_shap_sum,
+                    'category': 'Context & Other',
+                    'type': 'combined'
+                })
+            
+            # Sort each category and take top features per category
+            final_features = []
+            category_colors = {
+                'Fighter Differences': '#FF6B6B',
+                'Individual Skills': '#4ECDC4',
+                'Physical Attributes': '#96CEB4',
+                'Experience & Records': '#FFEAA7',
+                'Fighting Style': '#DDA0DD',
+                'Context & Other': '#FFA07A'
+            }
+            
+            # Limit features per category to prevent overcrowding
+            category_limits = {
+                'Fighter Differences': 6,
+                'Individual Skills': 5,
+                'Physical Attributes': 3,
+                'Experience & Records': 3,
+                'Fighting Style': 2,
+                'Context & Other': 1
+            }
+            
+            # Build the final ordered list GROUPED BY CATEGORY
+            for category in ['Fighter Differences', 'Individual Skills', 'Physical Attributes',
+                             'Experience & Records', 'Fighting Style', 'Context & Other']:
+                category_features = all_features_by_category[category]
+                if category_features:
+                    # Sort within category by absolute SHAP value
+                    category_features.sort(key=lambda x: abs(x['shap_value']), reverse=True)
+                    limit = category_limits[category]
+                    final_features.extend(category_features[:limit])
+            
+            # Take top 16 overall but maintain category grouping
+            if len(final_features) > 16:
+                # Proportionally reduce from each category
+                temp_features = []
+                for category in ['Fighter Differences', 'Individual Skills', 'Physical Attributes',
+                                 'Experience & Records', 'Fighting Style', 'Context & Other']:
+                    cat_features = [f for f in final_features if f['category'] == category]
+                    if cat_features:
+                        # Take proportional amount, minimum 1 per category
+                        proportion = max(1, int(len(cat_features) * 16 / len(final_features)))
+                        temp_features.extend(cat_features[:proportion])
+                final_features = temp_features[:16]
+            
+            # Create the plot with proper margins
+            plt.style.use('dark_background')
+            fig, ax = plt.subplots(figsize=(16, 10))
+            fig.patch.set_facecolor('#121212')
+            
+            feature_names = [f['name'] for f in final_features]
+            shap_vals = [f['shap_value'] for f in final_features]
+            categories = [f['category'] for f in final_features]
+            colors = [category_colors[cat] for cat in categories]
+            
+            # Create bars
+            y_pos = np.arange(len(feature_names))
+            bars = ax.barh(y_pos, shap_vals, color=colors, alpha=0.8, edgecolor='white', linewidth=0.5)
+            
+            # Customize the plot
+            ax.set_yticks(y_pos)
+            ax.set_yticklabels(feature_names, fontsize=11, color='white')
+            ax.invert_yaxis()
+            ax.set_xlabel('SHAP Impact', color='white', fontsize=14, fontweight='bold')
+            ax.axvline(0, color='white', linewidth=2, alpha=0.8)
+            
+            # REMOVE ALL GRID LINES
+            ax.grid(False)
+            
+            ax.set_facecolor('#121212')
+            
+            # Set x-axis increments to 0.1
+            x_min, x_max = ax.get_xlim()
+            # Extend range to nearest 0.1 increments
+            x_min_rounded = np.floor(x_min * 10) / 10
+            x_max_rounded = np.ceil(x_max * 10) / 10
+            
+            # Add margin for text
+            margin = 0.05
+            x_min_rounded -= margin
+            x_max_rounded += margin
+            
+            ax.set_xlim(x_min_rounded, x_max_rounded)
+            
+            # Set x-axis ticks to 0.1 increments
+            x_ticks = np.arange(x_min_rounded, x_max_rounded + 0.1, 0.1)
+            ax.set_xticks(x_ticks)
+            
+            # Add light grey vertical lines at every OTHER increment
+            for i, tick in enumerate(x_ticks):
+                if tick != 0 and i % 2 == 0:  # Every other increment, skipping 0
+                    ax.axvline(tick, color='lightgrey', linewidth=0.5, alpha=0.3)
+            
+            # Add clear direction indicators
+            ax.text(0.02, 1.02, f'← Favors {p2_name}', transform=ax.transAxes, 
+                    color='#4444FF', fontsize=14, fontweight='bold', va='bottom')
+            ax.text(0.98, 1.02, f'Favors {p1_name} →', transform=ax.transAxes, 
+                    color='#FF4444', fontsize=14, fontweight='bold', va='bottom', ha='right')
+            
+            # Add value labels with better positioning
+            x_min, x_max = ax.get_xlim()
+            x_range = x_max - x_min
+            safe_margin = x_range * 0.02  # 2% safe margin from edges
+            
+            for i, (bar, val) in enumerate(zip(bars, shap_vals)):
+                if val > 0:
+                    label_x = val + 0.003
+                    if label_x > x_max - safe_margin:
+                        label_x = x_max - safe_margin
+                    ha = 'left'
+                else:
+                    label_x = val - 0.003
+                    if label_x < x_min + safe_margin:
+                        label_x = x_min + safe_margin
+                    ha = 'right'
+                    
+                ax.text(label_x, bar.get_y() + bar.get_height()/2, f'{val:.3f}', 
+                       ha=ha, va='center', color='white', fontsize=10, fontweight='bold')
+            
+            # Add horizontal lines between categories
+            current_category = None
+            separator_positions = []
+            
+            for i, cat in enumerate(categories):
+                if cat != current_category:
+                    if current_category is not None:
+                        separator_positions.append(i - 0.5)
+                    current_category = cat
+            
+            # Draw the separator lines
+            for sep_pos in separator_positions:
+                ax.axhline(y=sep_pos, color='white', linewidth=1, alpha=0.7)
+            
+            # Get prediction info
+            prediction = self.loaded_model.predict_proba(fight_features_reordered)
+            p1_prob = prediction[0][1]
+            predicted_winner = p1_name if p1_prob > 0.5 else p2_name
+            
+            # Add title
+            ax.set_title(f'SHAP Feature Analysis: {p1_name} vs {p2_name}\nPredicted Winner: {predicted_winner} ({max(p1_prob, 1-p1_prob):.1%} confidence)\n(Showing features with >{MIN_THRESHOLD:.1%} impact)', 
+                        color='white', fontsize=16, fontweight='bold', pad=25)
+            
+            # Create legend for categories
+            from matplotlib.patches import Patch
+            legend_elements = []
+            seen_categories = []
+            for cat in categories:
+                if cat not in seen_categories:
+                    legend_elements.append(Patch(facecolor=category_colors[cat], label=cat))
+                    seen_categories.append(cat)
+            
+            ax.legend(handles=legend_elements, loc='lower right', facecolor='#121212', 
+                     edgecolor='white', fontsize=13)
+            
+            ax.tick_params(colors='white')
+            
+            # Enhanced margins to prevent text cutoff
+            plt.tight_layout()
+            plt.subplots_adjust(top=0.88, left=0.25, right=0.92, bottom=0.08)
+            
+            # Convert to base64
+            buffer = io.BytesIO()
+            plt.savefig(buffer, format='png', facecolor='#121212', dpi=150, bbox_inches='tight')
+            buffer.seek(0)
+            image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            plt.close()
+            
+            return f"data:image/png;base64,{image_base64}"
+            
+        except Exception as e:
+            print(f"Error generating SHAP plot: {str(e)}")
+            return None
     
     def combined_predict(self, p1, p2, eventDate, ref, prediction_type='winner'):
         """Main prediction function matching your original API"""
@@ -372,5 +800,17 @@ class UFCPredictor:
             p1_method_percentages, p2_method_percentages = self.get_method_percentages(p1, p2, eventDate, ref)
             result['fighter_1_method_percentages'] = p1_method_percentages
             result['fighter_2_method_percentages'] = p2_method_percentages
+        
+        return result
+    
+    def combined_predict_with_shap(self, p1, p2, eventDate, ref, prediction_type='winner'):
+        """Enhanced prediction function that includes SHAP visualization"""
+        # Get basic prediction
+        result = self.combined_predict(p1, p2, eventDate, ref, prediction_type)
+        
+        # Add SHAP plot
+        shap_plot = self.create_optimized_shap_visualization_base64(p1, p2, eventDate, ref)
+        if shap_plot:
+            result['shap_plot'] = shap_plot
         
         return result

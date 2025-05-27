@@ -1,6 +1,8 @@
+// types.ts
 export interface Event {
   id: string;
   name: string;
+  date: string; // Added event date
   matches: Match[];
 }
 
@@ -11,6 +13,7 @@ export interface Match {
   odds1: number;
   odds2: number;
   referee: string;
+  eventDate: string; // Added for backend API
   prediction?: MatchPrediction;
 }
 
@@ -24,4 +27,30 @@ export interface MatchPrediction {
   fighter2EV: number;
   fighter1Odds: number;
   fighter2Odds: number;
+  shapPlot?: string; // Base64 SHAP image
+  fighter1MethodPercentages?: MethodPrediction[];
+  fighter2MethodPercentages?: MethodPrediction[];
+  confidence: number;
+}
+
+export interface MethodPrediction {
+  method: string;
+  percentage: number;
+}
+
+export interface BackendPredictionResponse {
+  success: boolean;
+  data: {
+    fight_type: string;
+    fighter_1_name: string;
+    fighter_1_win_percentage: string;
+    fighter_2_name: string;
+    fighter_2_win_percentage: string;
+    predicted_winner: string;
+    event_date: string;
+    referee: string;
+    fighter_1_method_percentages?: string[];
+    fighter_2_method_percentages?: string[];
+    shap_plot?: string;
+  };
 }

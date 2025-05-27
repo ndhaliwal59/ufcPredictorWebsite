@@ -1,0 +1,61 @@
+// utils/calculations.ts
+import type { MethodPrediction, BackendPredictionResponse, MatchPrediction } from '../types';
+
+export function calculateEV(winPercent: number, odds: number): number {
+  // Convert American odds to decimal odds
+  const decimalOdds = odds > 0 ? (odds / 100) + 1 : (100 / Math.abs(odds)) + 1;
+  
+  // Calculate implied probability from odds
+  const impliedProbability = 1 / decimalOdds;
+  
+  // Calculate Expected Value: (Win Probability * Payout) - (Loss Probability * Stake)
+  const winProbability = winPercent / 100;
+  const lossProbability = 1 - winProbability;
+  const payout = decimalOdds - 1; // Profit per $1 bet
+  
+  const ev = (winProbability * payout) - (lossProbability * 1);
+  
+  return Math.round(ev * 100) / 100; // Round to 2 decimal places
+}
+
+export function parseMethodPercentages(methodStrings: string[]): MethodPrediction[] {
+  return methodStrings.map(str => {
+    const [method, percentStr] = str.split(': ');
+    const percentage = parseFloat(percentStr.replace('%', ''));
+    return { method, percentage };
+  });
+}
+
+export function transformBackendResponse(
+  backendData: BackendPredictionResponse['data'],
+  fighter1Odds: number,
+  fighter2Odds: number
+): MatchPrediction {
+  const fighter1WinPercent = parseFloat(backendData.fighter_1_win_percentage.replace('%', ''));
+  const fighter2WinPercent = parseFloat(backendData.fighter_2_win_percentage.replace('%', ''));
+
+  const fighter1EV = calculateEV(fighter1WinPercent, fighter1Odds);
+  const fighter2EV = calculateEV(fighter2WinPercent, fighter2Odds);
+
+  const confidence = Math.max(fighter1WinPercent, fighter2WinPercent);
+
+  return {
+    fighter1: backendData.fighter_1_name,
+    fighter2: backendData.fighter_2_name,
+    predictedWinner: backendData.predicted_winner,
+    fighter1WinPercent,
+    fighter2WinPercent,
+    fighter1EV,
+    fighter2EV,
+    fighter1Odds,
+    fighter2Odds,
+    confidence,
+    shapPlot: backendData.shap_plot,
+    fighter1MethodPercentages: backendData.fighter_1_method_percentages 
+      ? parseMethodPercentages(backendData.fighter_1_method_percentages)
+      : undefined,
+    fighter2MethodPercentages: backendData.fighter_2_method_percentages
+      ? parseMethodPercentages(backendData.fighter_2_method_percentages)
+      : undefined,
+  };
+}

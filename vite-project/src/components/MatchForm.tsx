@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+// components/MatchForm.tsx
+import React, { useState, useEffect } from 'react';
 import { Match } from '../types';
+import { apiService } from '../services/api';
 
 interface MatchFormProps {
   onSubmit: (match: Omit<Match, 'id' | 'prediction'>) => void;
+  eventDate: string; // Pass from parent component
 }
 
-const MatchForm: React.FC<MatchFormProps> = ({ onSubmit }) => {
+const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, eventDate }) => {
   const [formData, setFormData] = useState({
     fighter1: '',
     fighter2: '',
@@ -13,11 +16,60 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit }) => {
     odds2: 0,
     referee: '',
   });
+  
+  const [suggestions, setSuggestions] = useState<{
+    fighters: string[];
+    referees: string[];
+  }>({
+    fighters: [],
+    referees: [],
+  });
+  
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Load referees on component mount
+    loadReferees();
+  }, []);
+
+  const loadReferees = async () => {
+    try {
+      const response = await apiService.getReferees();
+      if (response.success) {
+        setSuggestions(prev => ({
+          ...prev,
+          referees: Object.keys(response.data.top_referees),
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to load referees:', error);
+    }
+  };
+
+  const searchFighters = async (query: string) => {
+    if (query.length < 2) return;
+    
+    try {
+      const response = await apiService.searchFighters(query);
+      if (response.success) {
+        setSuggestions(prev => ({
+          ...prev,
+          fighters: response.data.matches,
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to search fighters:', error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.fighter1 && formData.fighter2 && formData.referee) {
-      onSubmit(formData);
+      setLoading(true);
+      onSubmit({
+        ...formData,
+        eventDate,
+      });
       setFormData({
         fighter1: '',
         fighter2: '',
@@ -25,6 +77,7 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit }) => {
         odds2: 0,
         referee: '',
       });
+      setLoading(false);
     }
   };
 
@@ -34,6 +87,11 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit }) => {
       ...prev,
       [name]: type === 'number' ? parseFloat(value) || 0 : value,
     }));
+    
+    // Search fighters as user types
+    if (name === 'fighter1' || name === 'fighter2') {
+      searchFighters(value);
+    }
   };
 
   return (
@@ -48,6 +106,7 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit }) => {
             value={formData.fighter1}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-1"
+            list="fighters-list"
             required
           />
         </div>
@@ -59,6 +118,7 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit }) => {
             value={formData.fighter2}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-1"
+            list="fighters-list"
             required
           />
         </div>
@@ -70,6 +130,7 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit }) => {
             value={formData.odds1}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-1"
+            placeholder="e.g., -150 or +200"
             required
           />
         </div>
@@ -81,6 +142,7 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit }) => {
             value={formData.odds2}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-1"
+            placeholder="e.g., -150 or +200"
             required
           />
         </div>
@@ -92,18 +154,33 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit }) => {
             value={formData.referee}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-1"
+            list="referees-list"
             required
           />
         </div>
         <div className="md:col-span-2">
           <button
             type="submit"
-            className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            disabled={loading}
+            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
           >
-            Add Match & Generate Prediction
+            {loading ? 'Generating Prediction...' : 'Add Match & Generate Prediction'}
           </button>
         </div>
       </form>
+
+      {/* Datalists for autocomplete */}
+      <datalist id="fighters-list">
+        {suggestions.fighters.map((fighter) => (
+          <option key={fighter} value={fighter} />
+        ))}
+      </datalist>
+      
+      <datalist id="referees-list">
+        {suggestions.referees.map((referee) => (
+          <option key={referee} value={referee} />
+        ))}
+      </datalist>
     </div>
   );
 };

@@ -2,13 +2,11 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
 from datetime import datetime
+import pandas as pd
 from app.services.predictor import UFCPredictor
 
-# Import your existing auth dependency
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from main import get_current_user
+# Import from the new auth dependencies module instead of main
+from app.core.auth_dependencies import get_current_user
 
 router = APIRouter()
 
@@ -18,20 +16,6 @@ class PredictionRequest(BaseModel):
     event_date: str  # Format: 'YYYY-MM-DD'
     referee: str
     prediction_type: str = 'winner'  # 'winner' or 'method'
-
-class WinnerPredictionResponse(BaseModel):
-    fight_type: str
-    fighter_1_name: str
-    fighter_1_win_percentage: str
-    fighter_2_name: str
-    fighter_2_win_percentage: str
-    predicted_winner: str
-    event_date: str
-    referee: str
-
-class MethodPredictionResponse(WinnerPredictionResponse):
-    fighter_1_method_percentages: List[str]
-    fighter_2_method_percentages: List[str]
 
 @router.post("/predict", response_model=Dict[str, Any])
 async def predict_fight(
@@ -77,6 +61,90 @@ async def predict_fight(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
+@router.post("/predict-with-shap", response_model=Dict[str, Any])
+async def predict_fight_with_shap(
+    request: PredictionRequest,
+    current_user = Depends(get_current_user)
+):
+    """
+    Predict UFC fight outcome with SHAP visualization.
+    """
+    try:
+        # Add detailed logging for debugging
+        print(f"=== PREDICTION REQUEST RECEIVED ===")
+        print(f"Fighter 1: '{request.fighter_1}'")
+        print(f"Fighter 2: '{request.fighter_2}'")
+        print(f"Event date: '{request.event_date}'")
+        print(f"Referee: '{request.referee}'")
+        print(f"Prediction type: '{request.prediction_type}'")
+        
+        predictor = UFCPredictor()
+        
+        # Check if fighters exist BEFORE making prediction
+        print("Checking if fighters exist in database...")
+        try:
+            fighter1_data = predictor.get_fighter_data(request.fighter_1)
+            print(f"Fighter 1 found: {request.fighter_1}")
+        except ValueError as e:
+            print(f"Fighter 1 NOT FOUND: {request.fighter_1}")
+            raise HTTPException(status_code=400, detail=f"Fighter 1 not found: {request.fighter_1}")
+        
+        try:
+            fighter2_data = predictor.get_fighter_data(request.fighter_2)
+            print(f"Fighter 2 found: {request.fighter_2}")
+        except ValueError as e:
+            print(f"Fighter 2 NOT FOUND: {request.fighter_2}")
+            raise HTTPException(status_code=400, detail=f"Fighter 2 not found: {request.fighter_2}")
+        
+        # Validate prediction type
+        if request.prediction_type not in ['winner', 'method']:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"prediction_type must be 'winner' or 'method', got: {request.prediction_type}"
+            )
+        
+        # Validate date format
+        try:
+            parsed_date = datetime.strptime(request.event_date, '%Y-%m-%d')
+            print(f"Date validation successful: {parsed_date}")
+        except ValueError as e:
+            print(f"Date validation failed: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"event_date must be in YYYY-MM-DD format. Received: '{request.event_date}'"
+            )
+        
+        # Validate that names are not empty
+        if not request.fighter_1.strip():
+            raise HTTPException(status_code=400, detail="fighter_1 cannot be empty")
+        if not request.fighter_2.strip():
+            raise HTTPException(status_code=400, detail="fighter_2 cannot be empty")
+        if not request.referee.strip():
+            raise HTTPException(status_code=400, detail="referee cannot be empty")
+        
+        print("All validations passed, making prediction...")
+        
+        # Make prediction with SHAP visualization
+        result = predictor.combined_predict_with_shap(
+            p1=request.fighter_1,
+            p2=request.fighter_2,
+            eventDate=request.event_date,
+            ref=request.referee,
+            prediction_type=request.prediction_type
+        )
+        
+        print("Prediction successful!")
+        return {"success": True, "data": result}
+        
+    except ValueError as e:
+        print(f"ValueError in prediction: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"Unexpected error in prediction: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
 @router.get("/fighter/{fighter_name}")
 async def get_fighter_info(
     fighter_name: str,
@@ -86,7 +154,6 @@ async def get_fighter_info(
     try:
         predictor = UFCPredictor()
         
-        # Check if fighter exists
         try:
             fighter_data = predictor.get_fighter_data(fighter_name)
             
@@ -184,7 +251,8 @@ async def get_model_status(current_user = Depends(get_current_user)):
                     "fighters_count": len(predictor.fighters_df),
                     "cached_fighters": len(predictor.fighter_lookup),
                     "cached_referees": len(predictor.referee_counts_cache)
-                }
+                },
+                "shap_available": True
             }
         }
         

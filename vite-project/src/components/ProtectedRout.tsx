@@ -1,5 +1,6 @@
-import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+// components/ProtectedRoute.tsx
+import React, { useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useLocation } from 'wouter';
 
 interface ProtectedRouteProps {
@@ -10,7 +11,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   const [, setLocation] = useLocation();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!loading && !isAuthenticated) {
       setLocation('/');
     }
@@ -25,7 +26,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    return null; // Will redirect in useEffect
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-white">Redirecting...</div>
+      </div>
+    );
   }
 
   return <>{children}</>;

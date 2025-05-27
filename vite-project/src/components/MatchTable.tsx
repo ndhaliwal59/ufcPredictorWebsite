@@ -1,4 +1,5 @@
-import React from 'react';
+// components/MatchTable.tsx
+import React, { useState } from 'react';
 import { Match } from '../types';
 
 interface MatchTableProps {
@@ -7,6 +8,8 @@ interface MatchTableProps {
 }
 
 const MatchTable: React.FC<MatchTableProps> = ({ matches, onDeleteMatch }) => {
+  const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
+
   if (matches.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -15,6 +18,10 @@ const MatchTable: React.FC<MatchTableProps> = ({ matches, onDeleteMatch }) => {
     );
   }
 
+  const toggleExpanded = (matchId: string) => {
+    setExpandedMatch(expandedMatch === matchId ? null : matchId);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="overflow-x-auto">
@@ -22,16 +29,13 @@ const MatchTable: React.FC<MatchTableProps> = ({ matches, onDeleteMatch }) => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Fighter 1
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Fighter 2
+                Fighters
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Predicted Winner
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Win %
+                Win % / Confidence
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Expected Value
@@ -49,52 +53,126 @@ const MatchTable: React.FC<MatchTableProps> = ({ matches, onDeleteMatch }) => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {matches.map((match) => (
-              <tr key={match.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {match.fighter1}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {match.fighter2}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    {match.prediction?.predictedWinner || 'N/A'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <div className="space-y-1">
-                    <div>{match.fighter1}: {match.prediction?.fighter1WinPercent || 0}%</div>
-                    <div>{match.fighter2}: {match.prediction?.fighter2WinPercent || 0}%</div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <div className="space-y-1">
-                    <div className={match.prediction?.fighter1EV && match.prediction.fighter1EV > 0 ? 'text-green-600' : 'text-red-600'}>
-                      {match.fighter1}: {match.prediction?.fighter1EV || 0}
+              <React.Fragment key={match.id}>
+                <tr className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <div className="space-y-1">
+                      <div>{match.fighter1}</div>
+                      <div className="text-gray-600">vs</div>
+                      <div>{match.fighter2}</div>
                     </div>
-                    <div className={match.prediction?.fighter2EV && match.prediction.fighter2EV > 0 ? 'text-green-600' : 'text-red-600'}>
-                      {match.fighter2}: {match.prediction?.fighter2EV || 0}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      {match.prediction?.predictedWinner || 'N/A'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div className="space-y-1">
+                      <div>{match.fighter1}: {match.prediction?.fighter1WinPercent || 0}%</div>
+                      <div>{match.fighter2}: {match.prediction?.fighter2WinPercent || 0}%</div>
+                      {match.prediction?.confidence && (
+                        <div className="text-xs text-gray-500">
+                          Confidence: {match.prediction.confidence.toFixed(1)}%
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <div className="space-y-1">
-                    <div>{match.fighter1}: {match.odds1}</div>
-                    <div>{match.fighter2}: {match.odds2}</div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {match.referee}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={() => onDeleteMatch(match.id)}
-                    className="text-red-600 hover:text-red-900 transition-colors"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div className="space-y-1">
+                      <div className={match.prediction?.fighter1EV && match.prediction.fighter1EV > 0 ? 'text-green-600' : 'text-red-600'}>
+                        {match.fighter1}: {match.prediction?.fighter1EV || 0}
+                      </div>
+                      <div className={match.prediction?.fighter2EV && match.prediction.fighter2EV > 0 ? 'text-green-600' : 'text-red-600'}>
+                        {match.fighter2}: {match.prediction?.fighter2EV || 0}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div className="space-y-1">
+                      <div>{match.fighter1}: {match.odds1}</div>
+                      <div>{match.fighter2}: {match.odds2}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {match.referee}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                    <button
+                      onClick={() => toggleExpanded(match.id)}
+                      className="text-blue-600 hover:text-blue-900 transition-colors"
+                    >
+                      {expandedMatch === match.id ? 'Hide Details' : 'Show Details'}
+                    </button>
+                    <button
+                      onClick={() => onDeleteMatch(match.id)}
+                      className="text-red-600 hover:text-red-900 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+                
+                {/* Expanded Details */}
+                {expandedMatch === match.id && match.prediction && (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-4 bg-gray-50">
+                      <div className="space-y-6">
+                        
+                        {/* Method Predictions */}
+                        {(match.prediction.fighter1MethodPercentages || match.prediction.fighter2MethodPercentages) && (
+                          <div>
+                            <h4 className="text-lg font-semibold mb-3 text-gray-900">Win Method Predictions</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {match.prediction.fighter1MethodPercentages && (
+                                <div className="bg-white p-4 rounded-lg shadow">
+                                  <h5 className="font-medium text-gray-900 mb-2">{match.fighter1}</h5>
+                                  <div className="space-y-2">
+                                    {match.prediction.fighter1MethodPercentages.map((method, index) => (
+                                      <div key={index} className="flex justify-between">
+                                        <span className="text-sm text-gray-600">{method.method}:</span>
+                                        <span className="text-sm font-medium">{method.percentage.toFixed(1)}%</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {match.prediction.fighter2MethodPercentages && (
+                                <div className="bg-white p-4 rounded-lg shadow">
+                                  <h5 className="font-medium text-gray-900 mb-2">{match.fighter2}</h5>
+                                  <div className="space-y-2">
+                                    {match.prediction.fighter2MethodPercentages.map((method, index) => (
+                                      <div key={index} className="flex justify-between">
+                                        <span className="text-sm text-gray-600">{method.method}:</span>
+                                        <span className="text-sm font-medium">{method.percentage.toFixed(1)}%</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* SHAP Plot */}
+                        {match.prediction.shapPlot && (
+                          <div>
+                            <h4 className="text-lg font-semibold mb-3 text-gray-900">Feature Importance Analysis</h4>
+                            <div className="bg-white p-4 rounded-lg shadow">
+                              <img 
+                                src={match.prediction.shapPlot} 
+                                alt="SHAP Feature Analysis"
+                                className="w-full h-auto max-w-4xl mx-auto"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
           </tbody>
         </table>

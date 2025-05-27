@@ -22,6 +22,9 @@ from auth import (
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 
+# Import the moved dependency
+from app.core.auth_dependencies import get_current_user
+
 # Add these imports for UFC prediction routes
 from app.core.globals import set_models, set_datasets
 from app.routes import predictions
@@ -98,9 +101,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# OAuth2 scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-
 # Pydantic models
 class Token(BaseModel):
     access_token: str
@@ -113,24 +113,6 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
-# Dependency to get current user
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
-    username = verify_token(token)
-    if username is None:
-        raise credentials_exception
-    
-    user = get_user_by_username(db, username=username)
-    if user is None:
-        raise credentials_exception
-    
-    return user
 
 @app.post("/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
