@@ -2,7 +2,7 @@
 export interface Event {
   id: string;
   name: string;
-  date: string; // Added event date
+  date: string;
   matches: Match[];
 }
 
@@ -10,10 +10,10 @@ export interface Match {
   id: string;
   fighter1: string;
   fighter2: string;
-  odds1: number;
-  odds2: number;
+  odds1: string; // Changed from number to string
+  odds2: string; // Changed from number to string
   referee: string;
-  eventDate: string; // Added for backend API
+  eventDate: string;
   prediction?: MatchPrediction;
 }
 
@@ -25,9 +25,9 @@ export interface MatchPrediction {
   fighter2WinPercent: number;
   fighter1EV: number;
   fighter2EV: number;
-  fighter1Odds: number;
-  fighter2Odds: number;
-  shapPlot?: string; // Base64 SHAP image
+  fighter1Odds: string; // Changed from number to string
+  fighter2Odds: string; // Changed from number to string
+  shapPlot?: string;
   fighter1MethodPercentages?: MethodPrediction[];
   fighter2MethodPercentages?: MethodPrediction[];
   confidence: number;

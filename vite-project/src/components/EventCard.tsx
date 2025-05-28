@@ -29,52 +29,49 @@ const EventCard: React.FC<EventCardProps> = ({
     setIsEditing(false);
   };
 
-// In your EventCard.tsx handleAddMatch function
-const handleAddMatch = async (matchData: Omit<Match, 'id' | 'prediction'>) => {
-  setLoading(true);
-  try {
-    // Log the data being sent
-    console.log('Sending prediction request with data:', {
-      fighter_1: matchData.fighter1,
-      fighter_2: matchData.fighter2,
-      event_date: matchData.eventDate,
-      referee: matchData.referee,
-      prediction_type: 'method'
-    });
+  const handleAddMatch = async (matchData: Omit<Match, 'id' | 'prediction'>) => {
+    setLoading(true);
+    try {
+      console.log('Sending prediction request with data:', {
+        fighter_1: matchData.fighter1,
+        fighter_2: matchData.fighter2,
+        event_date: matchData.eventDate,
+        referee: matchData.referee,
+        prediction_type: 'method'
+      });
 
-    const response = await apiService.getPrediction(
-      matchData.fighter1,
-      matchData.fighter2,
-      matchData.eventDate,
-      matchData.referee
-    );
-
-    // Log the response
-    console.log('Prediction response:', response);
-
-    if (response.success) {
-      const prediction = transformBackendResponse(
-        response.data,
-        matchData.odds1,
-        matchData.odds2
+      const response = await apiService.getPrediction(
+        matchData.fighter1,
+        matchData.fighter2,
+        matchData.eventDate,
+        matchData.referee
       );
 
-      const newMatch: Match = {
-        id: crypto.randomUUID(),
-        ...matchData,
-        prediction,
-      };
+      console.log('Prediction response:', response);
 
-      const updatedMatches = [...event.matches, newMatch];
-      onUpdateMatches(event.id, updatedMatches);
+      if (response.success) {
+        const prediction = transformBackendResponse(
+          response.data,
+          matchData.odds1, // Now string
+          matchData.odds2  // Now string
+        );
+
+        const newMatch: Match = {
+          id: crypto.randomUUID(),
+          ...matchData,
+          prediction,
+        };
+
+        const updatedMatches = [...event.matches, newMatch];
+        onUpdateMatches(event.id, updatedMatches);
+      }
+    } catch (error) {
+      console.error('Detailed error:', error);
+      alert('Failed to generate prediction. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Detailed error:', error);
-    alert('Failed to generate prediction. Please check your connection and try again.');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleDeleteMatch = (matchId: string) => {
     const updatedMatches = event.matches.filter(match => match.id !== matchId);

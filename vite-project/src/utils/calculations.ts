@@ -1,9 +1,27 @@
 // utils/calculations.ts
 import type { MethodPrediction, BackendPredictionResponse, MatchPrediction } from '../types';
 
-export function calculateEV(winPercent: number, odds: number): number {
+export function parseOddsToNumber(odds: string): number {
+  // Remove any whitespace
+  const cleanOdds = odds.trim();
+  
+  // Remove + or - sign and convert to number
+  const numericOdds = parseInt(cleanOdds.replace(/[+-]/, ''));
+  
+  // Return with proper sign
+  if (cleanOdds.startsWith('-')) {
+    return -numericOdds;
+  } else {
+    return numericOdds;
+  }
+}
+
+export function calculateEV(winPercent: number, odds: string): number {
+  // Parse odds string to get numeric value
+  const numericOdds = parseOddsToNumber(odds);
+  
   // Convert American odds to decimal odds
-  const decimalOdds = odds > 0 ? (odds / 100) + 1 : (100 / Math.abs(odds)) + 1;
+  const decimalOdds = numericOdds > 0 ? (numericOdds / 100) + 1 : (100 / Math.abs(numericOdds)) + 1;
   
   // Calculate implied probability from odds
   const impliedProbability = 1 / decimalOdds;
@@ -28,8 +46,8 @@ export function parseMethodPercentages(methodStrings: string[]): MethodPredictio
 
 export function transformBackendResponse(
   backendData: BackendPredictionResponse['data'],
-  fighter1Odds: number,
-  fighter2Odds: number
+  fighter1Odds: string,
+  fighter2Odds: string
 ): MatchPrediction {
   const fighter1WinPercent = parseFloat(backendData.fighter_1_win_percentage.replace('%', ''));
   const fighter2WinPercent = parseFloat(backendData.fighter_2_win_percentage.replace('%', ''));
