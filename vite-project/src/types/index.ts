@@ -10,11 +10,12 @@ export interface Match {
   id: string;
   fighter1: string;
   fighter2: string;
-  odds1: string; // Changed from number to string
-  odds2: string; // Changed from number to string
+  odds1: string;
+  odds2: string;
   referee: string;
   eventDate: string;
   prediction?: MatchPrediction;
+  result: "pending" | "hit" | "miss"; // Added this field
 }
 
 export interface MatchPrediction {
@@ -25,8 +26,8 @@ export interface MatchPrediction {
   fighter2WinPercent: number;
   fighter1EV: number;
   fighter2EV: number;
-  fighter1Odds: string; // Changed from number to string
-  fighter2Odds: string; // Changed from number to string
+  fighter1Odds: string;
+  fighter2Odds: string;
   shapPlot?: string;
   fighter1MethodPercentages?: MethodPrediction[];
   fighter2MethodPercentages?: MethodPrediction[];

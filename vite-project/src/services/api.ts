@@ -62,7 +62,6 @@ class ApiService {
     return data;
   }
 
-  // Your prediction methods...
   async getPrediction(fighter1: string, fighter2: string, eventDate: string, referee: string): Promise<BackendPredictionResponse> {
     return this.makeRequest('/api/predictions/predict-with-shap', {
       method: 'POST',
@@ -82,6 +81,16 @@ class ApiService {
 
   async getReferees() {
     return this.makeRequest('/api/predictions/referees');
+  }
+
+  async updateMatchResult(matchId: string, result: "pending" | "hit" | "miss") {
+    return this.makeRequest('/api/predictions/match-result', {
+      method: 'POST',
+      body: JSON.stringify({
+        match_id: matchId,
+        result: result,
+      }),
+    });
   }
 }
 

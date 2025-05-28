@@ -1,6 +1,8 @@
 from typing import Dict, List, Any, Optional
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import base64
 import io

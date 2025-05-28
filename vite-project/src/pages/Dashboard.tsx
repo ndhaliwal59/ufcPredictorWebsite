@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Event, Match } from '../types';
 import EventForm from '../components/EventForm';
 import EventCard from '../components/EventCard';
+import { apiService } from '../services/api';
 
 const Dashboard: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -31,6 +32,27 @@ const Dashboard: React.FC = () => {
     setEvents(prev => prev.map(event => 
       event.id === eventId ? { ...event, matches } : event
     ));
+  };
+
+  const handleUpdateMatchResult = async (eventId: string, matchId: string, result: "pending" | "hit" | "miss") => {
+    try {
+      await apiService.updateMatchResult(matchId, result);
+      
+      // Update local state
+      setEvents(prev => prev.map(event => 
+        event.id === eventId 
+          ? {
+              ...event,
+              matches: event.matches.map(match =>
+                match.id === matchId ? { ...match, result } : match
+              )
+            }
+          : event
+      ));
+    } catch (error) {
+      console.error('Failed to update match result:', error);
+      alert('Failed to update result. Please try again.');
+    }
   };
 
   return (
@@ -64,6 +86,7 @@ const Dashboard: React.FC = () => {
                 onUpdateEvent={handleUpdateEvent}
                 onDeleteEvent={handleDeleteEvent}
                 onUpdateMatches={handleUpdateMatches}
+                onUpdateMatchResult={handleUpdateMatchResult}
               />
             ))}
           </div>

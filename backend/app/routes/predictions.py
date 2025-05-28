@@ -17,49 +17,38 @@ class PredictionRequest(BaseModel):
     referee: str
     prediction_type: str = 'winner'  # 'winner' or 'method'
 
-@router.post("/predict", response_model=Dict[str, Any])
-async def predict_fight(
-    request: PredictionRequest,
+class MatchResultUpdate(BaseModel):
+    match_id: str
+    result: str  # "pending", "hit", or "miss"
+
+# Your existing endpoints...
+
+@router.post("/match-result", response_model=Dict[str, Any])
+async def update_match_result(
+    request: MatchResultUpdate,
     current_user = Depends(get_current_user)
 ):
-    """
-    Predict UFC fight outcome using your optimized prediction model.
-    Supports both winner and method predictions.
-    """
+    """Update the result of a match prediction (hit/miss)."""
     try:
-        predictor = UFCPredictor()
-        
-        # Validate prediction type
-        if request.prediction_type not in ['winner', 'method']:
+        # Validate result value
+        if request.result not in ["pending", "hit", "miss"]:
             raise HTTPException(
                 status_code=400, 
-                detail="prediction_type must be 'winner' or 'method'"
+                detail="Result must be 'pending', 'hit', or 'miss'"
             )
         
-        # Validate date format
-        try:
-            datetime.strptime(request.event_date, '%Y-%m-%d')
-        except ValueError:
-            raise HTTPException(
-                status_code=400,
-                detail="event_date must be in YYYY-MM-DD format"
-            )
-        
-        # Make prediction using your optimized function
-        result = predictor.combined_predict(
-            p1=request.fighter_1,
-            p2=request.fighter_2,
-            eventDate=request.event_date,
-            ref=request.referee,
-            prediction_type=request.prediction_type
-        )
+        # Here you would typically save to database
+        # For now, just return the updated result
+        result = {
+            "match_id": request.match_id,
+            "result": request.result,
+            "updated_at": datetime.now().isoformat()
+        }
         
         return {"success": True, "data": result}
         
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update match result: {str(e)}")
 
 @router.post("/predict-with-shap", response_model=Dict[str, Any])
 async def predict_fight_with_shap(

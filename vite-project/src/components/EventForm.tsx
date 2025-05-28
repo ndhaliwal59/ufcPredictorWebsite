@@ -25,7 +25,7 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit }) => {
         value={eventName}
         onChange={(e) => setEventName(e.target.value)}
         placeholder="Event name (e.g., UFC 300)"
-        className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-2"
+        className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-2 text-black"
         required
       />
       <input

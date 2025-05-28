@@ -5,9 +5,10 @@ import { Match } from '../types';
 interface MatchTableProps {
   matches: Match[];
   onDeleteMatch: (matchId: string) => void;
+  onUpdateMatchResult: (matchId: string, result: "pending" | "hit" | "miss") => void;
 }
 
-const MatchTable: React.FC<MatchTableProps> = ({ matches, onDeleteMatch }) => {
+const MatchTable: React.FC<MatchTableProps> = ({ matches, onDeleteMatch, onUpdateMatchResult }) => {
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
 
   if (matches.length === 0) {
@@ -20,6 +21,20 @@ const MatchTable: React.FC<MatchTableProps> = ({ matches, onDeleteMatch }) => {
 
   const toggleExpanded = (matchId: string) => {
     setExpandedMatch(expandedMatch === matchId ? null : matchId);
+  };
+
+  const getResultBadge = (result: "pending" | "hit" | "miss") => {
+    const styles = {
+      pending: "bg-yellow-100 text-yellow-800",
+      hit: "bg-green-100 text-green-800",
+      miss: "bg-red-100 text-red-800"
+    };
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[result]}`}>
+        {result.charAt(0).toUpperCase() + result.slice(1)}
+      </span>
+    );
   };
 
   return (
@@ -45,6 +60,9 @@ const MatchTable: React.FC<MatchTableProps> = ({ matches, onDeleteMatch }) => {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Referee
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Result
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
@@ -97,6 +115,34 @@ const MatchTable: React.FC<MatchTableProps> = ({ matches, onDeleteMatch }) => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {match.referee}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div className="space-y-2">
+                      {getResultBadge(match.result)}
+                      <div className="flex space-x-1">
+                        <button
+                          onClick={() => onUpdateMatchResult(match.id, "hit")}
+                          className="text-xs bg-green-100 hover:bg-green-200 text-green-800 px-2 py-1 rounded transition-colors"
+                          disabled={match.result === "hit"}
+                        >
+                          Hit
+                        </button>
+                        <button
+                          onClick={() => onUpdateMatchResult(match.id, "miss")}
+                          className="text-xs bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 rounded transition-colors"
+                          disabled={match.result === "miss"}
+                        >
+                          Miss
+                        </button>
+                        <button
+                          onClick={() => onUpdateMatchResult(match.id, "pending")}
+                          className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 rounded transition-colors"
+                          disabled={match.result === "pending"}
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    </div>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                     <button
                       onClick={() => toggleExpanded(match.id)}
@@ -116,7 +162,7 @@ const MatchTable: React.FC<MatchTableProps> = ({ matches, onDeleteMatch }) => {
                 {/* Expanded Details */}
                 {expandedMatch === match.id && match.prediction && (
                   <tr>
-                    <td colSpan={7} className="px-6 py-4 bg-gray-50">
+                    <td colSpan={8} className="px-6 py-4 bg-gray-50">
                       <div className="space-y-6">
                         
                         {/* Method Predictions */}
@@ -131,7 +177,7 @@ const MatchTable: React.FC<MatchTableProps> = ({ matches, onDeleteMatch }) => {
                                     {match.prediction.fighter1MethodPercentages.map((method, index) => (
                                       <div key={index} className="flex justify-between">
                                         <span className="text-sm text-gray-600">{method.method}:</span>
-                                        <span className="text-sm font-medium">{method.percentage.toFixed(1)}%</span>
+                                        <span className="text-sm font-medium text-gray-600">{method.percentage.toFixed(1)}%</span>
                                       </div>
                                     ))}
                                   </div>
@@ -145,7 +191,7 @@ const MatchTable: React.FC<MatchTableProps> = ({ matches, onDeleteMatch }) => {
                                     {match.prediction.fighter2MethodPercentages.map((method, index) => (
                                       <div key={index} className="flex justify-between">
                                         <span className="text-sm text-gray-600">{method.method}:</span>
-                                        <span className="text-sm font-medium">{method.percentage.toFixed(1)}%</span>
+                                        <span className="text-sm font-medium text-gray-600">{method.percentage.toFixed(1)}%</span>
                                       </div>
                                     ))}
                                   </div>

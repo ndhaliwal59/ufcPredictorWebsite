@@ -4,7 +4,7 @@ import { Match } from '../types';
 import { apiService } from '../services/api';
 
 interface MatchFormProps {
-  onSubmit: (match: Omit<Match, 'id' | 'prediction'>) => void;
+  onSubmit: (match: Omit<Match, 'id' | 'prediction' | 'result'>) => void;
   eventDate: string;
 }
 
@@ -28,7 +28,6 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, eventDate }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Load referees on component mount
     loadReferees();
   }, []);
 
@@ -62,39 +61,25 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, eventDate }) => {
     }
   };
 
-  const validateOdds = (value: string): boolean => {
-    // Check if it's a valid American odds format (+/- followed by numbers)
-    const oddsPattern = /^[+-]\d+$/;
-    return oddsPattern.test(value.trim());
-  };
-
   const formatOdds = (value: string): string => {
-    // Handle empty value
     if (!value) return '';
     
     const trimmedValue = value.trim();
     
-    // If user just typed a minus sign, keep it
     if (trimmedValue === '-') return '-';
-    
-    // If user just typed a plus sign, keep it  
     if (trimmedValue === '+') return '+';
     
-    // Check if it starts with + or -
     const isNegative = trimmedValue.startsWith('-');
     const isPositive = trimmedValue.startsWith('+');
     
-    // Extract only the numeric part
     const numericValue = trimmedValue.replace(/[^\d]/g, '');
     
-    // If no numeric value yet, return just the sign
     if (!numericValue) {
       if (isNegative) return '-';
       if (isPositive) return '+';
-      return '+'; // Default to positive if no sign
+      return '+';
     }
     
-    // Return formatted odds with appropriate sign
     if (isNegative) {
       return `-${numericValue}`;
     } else {
@@ -122,23 +107,20 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, eventDate }) => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
     
     if (name === 'odds1' || name === 'odds2') {
-      // Format odds inputs
       const formattedValue = formatOdds(value);
       setFormData(prev => ({
         ...prev,
         [name]: formattedValue,
       }));
     } else {
-      // Handle other inputs (fighter names, referee)
       setFormData(prev => ({
         ...prev,
         [name]: value,
       }));
       
-      // Search fighters as user types - THIS IS THE KEY PART
       if (name === 'fighter1' || name === 'fighter2') {
         searchFighters(value);
       }
@@ -220,7 +202,6 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, eventDate }) => {
         </div>
       </form>
 
-      {/* Datalists for autocomplete */}
       <datalist id="fighters-list">
         {suggestions.fighters.map((fighter) => (
           <option key={fighter} value={fighter} />

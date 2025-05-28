@@ -11,6 +11,7 @@ interface EventCardProps {
   onUpdateEvent: (eventId: string, newName: string) => void;
   onDeleteEvent: (eventId: string) => void;
   onUpdateMatches: (eventId: string, matches: Match[]) => void;
+  onUpdateMatchResult: (eventId: string, matchId: string, result: "pending" | "hit" | "miss") => void;
 }
 
 const EventCard: React.FC<EventCardProps> = ({
@@ -18,6 +19,7 @@ const EventCard: React.FC<EventCardProps> = ({
   onUpdateEvent,
   onDeleteEvent,
   onUpdateMatches,
+  onUpdateMatchResult,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(event.name);
@@ -29,7 +31,7 @@ const EventCard: React.FC<EventCardProps> = ({
     setIsEditing(false);
   };
 
-  const handleAddMatch = async (matchData: Omit<Match, 'id' | 'prediction'>) => {
+  const handleAddMatch = async (matchData: Omit<Match, 'id' | 'prediction' | 'result'>) => {
     setLoading(true);
     try {
       console.log('Sending prediction request with data:', {
@@ -52,14 +54,15 @@ const EventCard: React.FC<EventCardProps> = ({
       if (response.success) {
         const prediction = transformBackendResponse(
           response.data,
-          matchData.odds1, // Now string
-          matchData.odds2  // Now string
+          matchData.odds1,
+          matchData.odds2
         );
 
         const newMatch: Match = {
           id: crypto.randomUUID(),
           ...matchData,
           prediction,
+          result: "pending", // Add default result
         };
 
         const updatedMatches = [...event.matches, newMatch];
@@ -156,6 +159,7 @@ const EventCard: React.FC<EventCardProps> = ({
           <MatchTable 
             matches={event.matches} 
             onDeleteMatch={handleDeleteMatch}
+            onUpdateMatchResult={(matchId, result) => onUpdateMatchResult(event.id, matchId, result)}
           />
         </div>
       </div>
