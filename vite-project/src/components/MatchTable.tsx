@@ -11,6 +11,15 @@ interface MatchTableProps {
 const MatchTable: React.FC<MatchTableProps> = ({ matches, onDeleteMatch, onUpdateMatchResult }) => {
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
 
+  console.log('=== MATCH TABLE DEBUG ===');
+  console.log('Matches received:', matches);
+  
+  matches.forEach((match, index) => {
+    console.log(`Match ${index}:`, match);
+    console.log(`  Prediction:`, match.prediction);
+    console.log(`  Prediction data:`, match.prediction_data);
+  });
+
   if (matches.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -99,10 +108,10 @@ const MatchTable: React.FC<MatchTableProps> = ({ matches, onDeleteMatch, onUpdat
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div className="space-y-1">
                       <div className={match.prediction?.fighter1EV && match.prediction.fighter1EV > 0 ? 'text-green-600' : 'text-red-600'}>
-                        {match.fighter1}: {match.prediction?.fighter1EV || 0}
+                        {match.fighter1}: {match.prediction?.fighter1EV?.toFixed(2) || 0}
                       </div>
                       <div className={match.prediction?.fighter2EV && match.prediction.fighter2EV > 0 ? 'text-green-600' : 'text-red-600'}>
-                        {match.fighter2}: {match.prediction?.fighter2EV || 0}
+                        {match.fighter2}: {match.prediction?.fighter2EV?.toFixed(2) || 0}
                       </div>
                     </div>
                   </td>

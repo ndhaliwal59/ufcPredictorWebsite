@@ -14,8 +14,9 @@ export interface Match {
   odds2: string;
   referee: string;
   eventDate: string;
+  prediction_data?: MatchPrediction;
   prediction?: MatchPrediction;
-  result: "pending" | "hit" | "miss"; // Added this field
+  result: "pending" | "hit" | "miss";
 }
 
 export interface MatchPrediction {

@@ -1,3 +1,4 @@
+# globals.py
 from typing import Optional, Dict
 import pandas as pd
 import xgboost as xgb

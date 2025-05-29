@@ -36,11 +36,36 @@ export function calculateEV(winPercent: number, odds: string): number {
   return Math.round(ev * 100) / 100; // Round to 2 decimal places
 }
 
-export function parseMethodPercentages(methodStrings: string[]): MethodPrediction[] {
+export function parseMethodPercentages(methodStrings: string[] | undefined): MethodPrediction[] {
+  if (!methodStrings || !Array.isArray(methodStrings)) {
+    return [];
+  }
+  
   return methodStrings.map(str => {
-    const [method, percentStr] = str.split(': ');
-    const percentage = parseFloat(percentStr.replace('%', ''));
-    return { method, percentage };
+    try {
+      // Handle different potential formats
+      const parts = str.split(':');
+      if (parts.length === 2) {
+        const method = parts[0].trim();
+        const percentStr = parts[1].trim().replace('%', '').replace(' ', '');
+        const percentage = parseFloat(percentStr) || 0;
+        return { method, percentage };
+      }
+      
+      // Fallback - try to extract method and percentage from string
+      const match = str.match(/^(.+?)[\s:]+(\d+\.?\d*)%?$/);
+      if (match) {
+        const method = match[1].trim();
+        const percentage = parseFloat(match[2]) || 0;
+        return { method, percentage };
+      }
+      
+      // Final fallback
+      return { method: str, percentage: 0 };
+    } catch (error) {
+      console.warn('Failed to parse method percentage:', str, error);
+      return { method: str, percentage: 0 };
+    }
   });
 }
 
@@ -69,11 +94,7 @@ export function transformBackendResponse(
     fighter2Odds,
     confidence,
     shapPlot: backendData.shap_plot,
-    fighter1MethodPercentages: backendData.fighter_1_method_percentages 
-      ? parseMethodPercentages(backendData.fighter_1_method_percentages)
-      : undefined,
-    fighter2MethodPercentages: backendData.fighter_2_method_percentages
-      ? parseMethodPercentages(backendData.fighter_2_method_percentages)
-      : undefined,
+    fighter1MethodPercentages: parseMethodPercentages(backendData.fighter_1_method_percentages),
+    fighter2MethodPercentages: parseMethodPercentages(backendData.fighter_2_method_percentages),
   };
 }

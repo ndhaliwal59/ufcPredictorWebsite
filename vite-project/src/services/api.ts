@@ -43,6 +43,7 @@ class ApiService {
     return response.json();
   }
 
+  // Auth methods
   async login(username: string, password: string) {
     const formData = new FormData();
     formData.append('username', username);
@@ -62,6 +63,7 @@ class ApiService {
     return data;
   }
 
+  // UFC Prediction methods
   async getPrediction(fighter1: string, fighter2: string, eventDate: string, referee: string): Promise<BackendPredictionResponse> {
     return this.makeRequest('/api/predictions/predict-with-shap', {
       method: 'POST',
@@ -83,15 +85,80 @@ class ApiService {
     return this.makeRequest('/api/predictions/referees');
   }
 
-  async updateMatchResult(matchId: string, result: "pending" | "hit" | "miss") {
-    return this.makeRequest('/api/predictions/match-result', {
+  async getFighterInfo(fighterName: string) {
+    return this.makeRequest(`/api/predictions/fighter/${encodeURIComponent(fighterName)}`);
+  }
+
+  async getModelStatus() {
+    return this.makeRequest('/api/predictions/models/status');
+  }
+
+  // Event management methods (NEW DATABASE INTEGRATION)
+  async getEvents() {
+    return this.makeRequest('/api/events');
+  }
+
+  async createEvent(name: string, date: string) {
+    return this.makeRequest('/api/events', {
       method: 'POST',
-      body: JSON.stringify({
-        match_id: matchId,
-        result: result,
-      }),
+      body: JSON.stringify({ name, date }),
     });
   }
+
+  async updateEvent(eventId: string, name: string, date: string) {
+    return this.makeRequest(`/api/events/${eventId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name, date }),
+    });
+  }
+
+  async deleteEvent(eventId: string) {
+    return this.makeRequest(`/api/events/${eventId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Match management methods (NEW DATABASE INTEGRATION)
+  async createMatch(eventId: string, matchData: {
+    fighter1: string;
+    fighter2: string;
+    odds1: string;
+    odds2: string;
+    referee: string;
+    event_date: string;
+    prediction_data?: any;
+  }) {
+    return this.makeRequest(`/api/events/${eventId}/matches`, {
+      method: 'POST',
+      body: JSON.stringify(matchData),
+    });
+  }
+
+  async deleteMatch(matchId: string) {
+    return this.makeRequest(`/api/matches/${matchId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Match result update (NEW DATABASE INTEGRATION)
+  async updateMatchResult(matchId: string, result: "pending" | "hit" | "miss") {
+    return this.makeRequest(`/api/matches/${matchId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ result }),
+    });
+  }
+
+  // // Legacy match result update (ORIGINAL PREDICTIONS ROUTER)
+  // // Keep this if you still want to use the original predictions endpoint
+  // async updateMatchResultLegacy(matchId: string, result: "pending" | "hit" | "miss") {
+  //   return this.makeRequest('/api/predictions/match-result', {
+  //     method: 'POST',
+  //     body: JSON.stringify({
+  //       match_id: matchId,
+  //       result: result,
+  //     }),
+  //   });
+  // }
 }
 
 export const apiService = new ApiService();

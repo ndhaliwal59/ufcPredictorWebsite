@@ -6,6 +6,7 @@ import { apiService } from '../services/api';
 interface MatchFormProps {
   onSubmit: (match: Omit<Match, 'id' | 'prediction' | 'result'>) => void;
   eventDate: string;
+  disabled?: boolean;
 }
 
 const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, eventDate }) => {

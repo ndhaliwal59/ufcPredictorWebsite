@@ -13,7 +13,7 @@ import xgboost as xgb
 from pathlib import Path
 
 from database import get_db, engine
-from models import Base, User
+from models import Base, User, Event, Match
 from auth import (
     authenticate_user, 
     create_access_token, 
@@ -27,7 +27,7 @@ from app.core.auth_dependencies import get_current_user
 
 # Add these imports for UFC prediction routes
 from app.core.globals import set_models, set_datasets
-from app.routes import predictions
+from app.routes import predictions, events
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -83,7 +83,7 @@ async def lifespan(app: FastAPI):
     print("Shutting down...")
 
 # Create FastAPI app with lifespan
-app = FastAPI(title="Login Backend API", lifespan=lifespan)
+app = FastAPI(title="UFC Predictions API with Dashboard", lifespan=lifespan)
 
 # CORS configuration
 origins = [
@@ -145,14 +145,20 @@ async def dashboard(current_user: User = Depends(get_current_user)):
 @app.get("/")
 async def root():
     """Health check endpoint."""
-    return {"message": "Login Backend API is running"}
+    return {"message": "UFC Predictions API with Dashboard is running"}
 
-# Include UFC prediction routes
+# Include all routes
 try:
     app.include_router(predictions.router, prefix="/api/predictions", tags=["predictions"])
     print("UFC prediction routes added successfully")
 except Exception as e:
     print(f"Could not add UFC prediction routes: {e}")
+
+try:
+    app.include_router(events.router, prefix="/api", tags=["events"])
+    print("Events routes added successfully")
+except Exception as e:
+    print(f"Could not add events routes: {e}")
 
 if __name__ == "__main__":
     import uvicorn
