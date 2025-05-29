@@ -17,10 +17,12 @@ router = APIRouter()
 class EventCreate(BaseModel):
     name: str
     date: date
+    location: Optional[str] = None  # NEW FIELD
 
 class EventUpdate(BaseModel):
     name: str
     date: date
+    location: Optional[str] = None  # NEW FIELD
 
 class MatchCreate(BaseModel):
     fighter1: str
@@ -28,6 +30,7 @@ class MatchCreate(BaseModel):
     odds1: str
     odds2: str
     referee: str
+    weightclass: Optional[str] = None  # NEW FIELD
     event_date: date
     prediction_data: Optional[Dict[str, Any]] = None
 
@@ -86,6 +89,7 @@ async def get_events(
                     'odds1': match.odds1,
                     'odds2': match.odds2,
                     'referee': match.referee,
+                    'weightclass': match.weightclass,  # NEW FIELD
                     'event_date': match.event_date.isoformat(),
                     'result': match.result,
                     'prediction_data': match.prediction_data,
@@ -99,6 +103,7 @@ async def get_events(
                 'id': str(event.id),
                 'name': event.name,
                 'date': event.date.isoformat(),
+                'location': event.location,  # NEW FIELD
                 'created_at': event.created_at.isoformat(),
                 'matches': matches_data
             }
@@ -106,7 +111,7 @@ async def get_events(
         
         print(f"\n=== FINAL EVENTS DATA ===")
         for event in events_data:
-            print(f"Event: {event['name']}")
+            print(f"Event: {event['name']} at {event['location']}")
             for match in event['matches']:
                 print(f"  Match prediction_data: {match['prediction_data']}")
         
@@ -129,6 +134,7 @@ async def create_event(
         db_event = Event(
             name=event_data.name,
             date=event_data.date,
+            location=event_data.location,  # NEW FIELD
             user_id=current_user.id
         )
         db.add(db_event)
@@ -140,6 +146,7 @@ async def create_event(
             'id': str(db_event.id),
             'name': db_event.name,
             'date': db_event.date.isoformat(),
+            'location': db_event.location,  # NEW FIELD
             'created_at': db_event.created_at.isoformat(),
             'matches': []  # Ensure matches is always an array
         }
@@ -168,6 +175,7 @@ async def update_event(
         
         db_event.name = event_data.name
         db_event.date = event_data.date
+        db_event.location = event_data.location  # NEW FIELD
         db_event.updated_at = datetime.utcnow()
         
         db.commit()
@@ -178,6 +186,7 @@ async def update_event(
             'id': str(db_event.id),
             'name': db_event.name,
             'date': db_event.date.isoformat(),
+            'location': db_event.location,  # NEW FIELD
             'created_at': db_event.created_at.isoformat(),
             'matches': [
                 {
@@ -187,6 +196,7 @@ async def update_event(
                     'odds1': match.odds1,
                     'odds2': match.odds2,
                     'referee': match.referee,
+                    'weightclass': match.weightclass,  # NEW FIELD
                     'event_date': match.event_date.isoformat(),
                     'result': match.result,
                     'prediction_data': match.prediction_data,
@@ -275,6 +285,7 @@ async def create_match(
             odds1=match_data.odds1,
             odds2=match_data.odds2,
             referee=match_data.referee,
+            weightclass=match_data.weightclass,  # NEW FIELD
             event_date=match_data.event_date,
             prediction_data=prediction_data
         )
@@ -301,6 +312,7 @@ async def create_match(
             'odds1': db_match.odds1,
             'odds2': db_match.odds2,
             'referee': db_match.referee,
+            'weightclass': db_match.weightclass,  # NEW FIELD
             'event_date': db_match.event_date.isoformat(),
             'result': db_match.result,
             'prediction_data': db_match.prediction_data,
@@ -355,6 +367,7 @@ async def update_match_result(
             'odds1': db_match.odds1,
             'odds2': db_match.odds2,
             'referee': db_match.referee,
+            'weightclass': db_match.weightclass,  # NEW FIELD
             'event_date': db_match.event_date.isoformat(),
             'result': db_match.result,
             'prediction_data': db_match.prediction_data,

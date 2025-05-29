@@ -23,6 +23,7 @@ class Event(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String, nullable=False)
     date = Column(Date, nullable=False)
+    location = Column(String, nullable=True)  # NEW FIELD
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -41,6 +42,7 @@ class Match(Base):
     odds1 = Column(String, nullable=False)
     odds2 = Column(String, nullable=False)
     referee = Column(String, nullable=False)
+    weightclass = Column(String, nullable=True)  # NEW FIELD
     event_date = Column(Date, nullable=False)
     result = Column(String, default="pending")  # pending, hit, miss
     prediction_data = Column(JSON, nullable=True)  # Store all prediction details as JSON

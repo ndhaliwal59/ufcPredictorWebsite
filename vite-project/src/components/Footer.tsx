@@ -67,8 +67,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#about">
-                  <div className="text-[#9CA3AF] hover:text-white transition-colors duration-200 cursor-pointer">About</div>
+                <Link href="/login">
+                  <div className="text-[#9CA3AF] hover:text-white transition-colors duration-200 cursor-pointer">Admin</div>
                 </Link>
               </li>
             </ul>

@@ -12,13 +12,13 @@ function App() {
   return (
     <AuthProvider>
       <Switch>
-        <Route path="/" component={LoginForm} />
+        <Route path="/" component={Home} />
+        <Route path="/login" component={LoginForm} />
           <Route path="/dashboard">
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
           </Route>
-        <Route path="/home" component={Home} />
         <Route path="/events" component={Events} />
         <Route path="/how-it-works" component={HowItWorks} />
         <Route component={NotFound} />

@@ -93,22 +93,22 @@ class ApiService {
     return this.makeRequest('/api/predictions/models/status');
   }
 
-  // Event management methods (NEW DATABASE INTEGRATION)
+  // Event management methods (UPDATED)
   async getEvents() {
     return this.makeRequest('/api/events');
   }
 
-  async createEvent(name: string, date: string) {
+  async createEvent(name: string, date: string, location: string = '') {
     return this.makeRequest('/api/events', {
       method: 'POST',
-      body: JSON.stringify({ name, date }),
+      body: JSON.stringify({ name, date, location }),
     });
   }
 
-  async updateEvent(eventId: string, name: string, date: string) {
+  async updateEvent(eventId: string, name: string, date: string, location: string = '') {
     return this.makeRequest(`/api/events/${eventId}`, {
       method: 'PUT',
-      body: JSON.stringify({ name, date }),
+      body: JSON.stringify({ name, date, location }),
     });
   }
 
@@ -118,13 +118,14 @@ class ApiService {
     });
   }
 
-  // Match management methods (NEW DATABASE INTEGRATION)
+  // Match management methods (UPDATED)
   async createMatch(eventId: string, matchData: {
     fighter1: string;
     fighter2: string;
     odds1: string;
     odds2: string;
     referee: string;
+    weightclass?: string;  // NEW FIELD
     event_date: string;
     prediction_data?: any;
   }) {
@@ -140,25 +141,13 @@ class ApiService {
     });
   }
 
-  // Match result update (NEW DATABASE INTEGRATION)
+  // Match result update
   async updateMatchResult(matchId: string, result: "pending" | "hit" | "miss") {
     return this.makeRequest(`/api/matches/${matchId}`, {
       method: 'PUT',
       body: JSON.stringify({ result }),
     });
   }
-
-  // // Legacy match result update (ORIGINAL PREDICTIONS ROUTER)
-  // // Keep this if you still want to use the original predictions endpoint
-  // async updateMatchResultLegacy(matchId: string, result: "pending" | "hit" | "miss") {
-  //   return this.makeRequest('/api/predictions/match-result', {
-  //     method: 'POST',
-  //     body: JSON.stringify({
-  //       match_id: matchId,
-  //       result: result,
-  //     }),
-  //   });
-  // }
 }
 
 export const apiService = new ApiService();

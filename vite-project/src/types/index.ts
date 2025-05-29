@@ -3,6 +3,7 @@ export interface Event {
   id: string;
   name: string;
   date: string;
+  location?: string;  // NEW FIELD
   matches: Match[];
 }
 
@@ -13,6 +14,7 @@ export interface Match {
   odds1: string;
   odds2: string;
   referee: string;
+  weightclass?: string;  // NEW FIELD
   eventDate: string;
   prediction_data?: MatchPrediction;
   prediction?: MatchPrediction;

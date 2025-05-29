@@ -16,6 +16,7 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, eventDate }) => {
     odds1: '',
     odds2: '',
     referee: '',
+    weightclass: '',  // NEW FIELD
   });
   
   const [suggestions, setSuggestions] = useState<{
@@ -102,12 +103,13 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, eventDate }) => {
         odds1: '',
         odds2: '',
         referee: '',
+        weightclass: '',  // NEW FIELD
       });
       setLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
     if (name === 'odds1' || name === 'odds2') {
@@ -127,6 +129,22 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, eventDate }) => {
       }
     }
   };
+
+  // Common weight classes for UFC
+  const weightClasses = [
+    'Flyweight',
+    'Bantamweight',
+    'Featherweight',
+    'Lightweight',
+    'Welterweight',
+    'Middleweight',
+    'Light Heavyweight',
+    'Heavyweight',
+    "Women's Strawweight",
+    "Women's Flyweight",
+    "Women's Bantamweight",
+    "Women's Featherweight",
+  ];
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
@@ -180,7 +198,23 @@ const MatchForm: React.FC<MatchFormProps> = ({ onSubmit, eventDate }) => {
             required
           />
         </div>
-        <div className="md:col-span-2">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Weight Class</label>
+          <select
+            name="weightclass"
+            value={formData.weightclass}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-1"
+          >
+            <option value="">Select Weight Class</option>
+            {weightClasses.map((weightClass) => (
+              <option key={weightClass} value={weightClass}>
+                {weightClass}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
           <label className="block text-sm font-medium text-gray-700">Referee</label>
           <input
             type="text"
