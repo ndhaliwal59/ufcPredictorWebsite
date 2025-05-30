@@ -1,6 +1,3 @@
-// services/api.ts
-import type { BackendPredictionResponse } from '../types';
-
 const API_BASE_URL = 'http://localhost:8000';
 
 class ApiService {
@@ -20,12 +17,41 @@ class ApiService {
     localStorage.removeItem('auth_token');
   }
 
-  private async makeRequest(endpoint: string, options: RequestInit = {}) {
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(this.token && { Authorization: `Bearer ${this.token}` }),
-      ...options.headers,
-    };
+  // Utility to build headers safely
+  private buildHeaders(requireAuth: boolean): Headers {
+    const headers = new Headers();
+    headers.set('Content-Type', 'application/json');
+    if (requireAuth && this.token) {
+      headers.set('Authorization', `Bearer ${this.token}`);
+    }
+    return headers;
+  }
+
+  // Generic request method that can skip auth for public endpoints
+  private async makeRequest(
+    endpoint: string,
+    options: RequestInit = {},
+    requireAuth = true
+  ) {
+    const headers = this.buildHeaders(requireAuth);
+
+    // If options.headers exists, merge them in
+    if (options.headers) {
+      // If it's a Headers instance
+      if (options.headers instanceof Headers) {
+        options.headers.forEach((value, key) => headers.set(key, value));
+      }
+      // If it's an array of tuples
+      else if (Array.isArray(options.headers)) {
+        options.headers.forEach(([key, value]) => headers.set(key, value));
+      }
+      // If it's a plain object
+      else {
+        Object.entries(options.headers as Record<string, string>).forEach(
+          ([key, value]) => headers.set(key, value)
+        );
+      }
+    }
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
@@ -33,7 +59,7 @@ class ApiService {
     });
 
     if (!response.ok) {
-      if (response.status === 401) {
+      if (response.status === 401 && requireAuth) {
         this.clearToken();
         throw new Error('Authentication required');
       }
@@ -41,6 +67,11 @@ class ApiService {
     }
 
     return response.json();
+  }
+
+  // PUBLIC: Get all public events (no auth required)
+  async getPublicEvents() {
+    return this.makeRequest('/api/public-events', {}, false);
   }
 
   // Auth methods
@@ -63,8 +94,8 @@ class ApiService {
     return data;
   }
 
-  // UFC Prediction methods
-  async getPrediction(fighter1: string, fighter2: string, eventDate: string, referee: string): Promise<BackendPredictionResponse> {
+  // UFC Prediction methods (require auth)
+  async getPrediction(fighter1: string, fighter2: string, eventDate: string, referee: string) {
     return this.makeRequest('/api/predictions/predict-with-shap', {
       method: 'POST',
       body: JSON.stringify({
@@ -93,7 +124,7 @@ class ApiService {
     return this.makeRequest('/api/predictions/models/status');
   }
 
-  // Event management methods (UPDATED)
+  // Event management methods (require auth)
   async getEvents() {
     return this.makeRequest('/api/events');
   }
@@ -118,14 +149,14 @@ class ApiService {
     });
   }
 
-  // Match management methods (UPDATED)
+  // Match management methods (require auth)
   async createMatch(eventId: string, matchData: {
     fighter1: string;
     fighter2: string;
     odds1: string;
     odds2: string;
     referee: string;
-    weightclass?: string;  // NEW FIELD
+    weightclass?: string;
     event_date: string;
     prediction_data?: any;
   }) {
@@ -141,7 +172,7 @@ class ApiService {
     });
   }
 
-  // Match result update
+  // Match result update (require auth)
   async updateMatchResult(matchId: string, result: "pending" | "hit" | "miss") {
     return this.makeRequest(`/api/matches/${matchId}`, {
       method: 'PUT',

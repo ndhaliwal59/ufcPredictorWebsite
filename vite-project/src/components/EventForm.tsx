@@ -1,4 +1,3 @@
-// components/EventForm.tsx
 import React, { useState } from 'react';
 
 interface EventFormProps {
@@ -13,6 +12,7 @@ const EventForm: React.FC<EventFormProps> = ({ onSubmit }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (eventName.trim() && eventDate) {
+      // Use the date string directly without Date object conversion to avoid timezone issues
       onSubmit(eventName.trim(), eventDate, location.trim());
       setEventName('');
       setEventDate('');

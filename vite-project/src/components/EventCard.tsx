@@ -1,4 +1,3 @@
-// components/EventCard.tsx
 import React, { useState } from 'react';
 import { Event, Match } from '../types';
 import MatchForm from './MatchForm';
@@ -8,7 +7,7 @@ import { transformBackendResponse } from '../utils/calculations';
 
 interface EventCardProps {
   event: Event;
-  onUpdateEvent: (eventId: string, newName: string, newDate: string) => void;
+  onUpdateEvent: (eventId: string, newName: string, newDate: string, newLocation: string) => void;
   onDeleteEvent: (eventId: string) => void;
   onUpdateMatches: (eventId: string, matches: Match[]) => void;
   onUpdateMatchResult: (eventId: string, matchId: string, result: "pending" | "hit" | "miss") => void;
@@ -24,6 +23,7 @@ const EventCard: React.FC<EventCardProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(event.name);
   const [editDate, setEditDate] = useState(event.date);
+  const [editLocation, setEditLocation] = useState(event.location || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [matches, setMatches] = useState<Match[]>(event.matches || []);
@@ -34,7 +34,7 @@ const EventCard: React.FC<EventCardProps> = ({
 
   const handleSaveEdit = async () => {
     if (editName.trim() && editDate) {
-      await onUpdateEvent(event.id, editName.trim(), editDate);
+      await onUpdateEvent(event.id, editName.trim(), editDate, editLocation.trim());
       setIsEditing(false);
     }
   };
@@ -77,19 +77,21 @@ const EventCard: React.FC<EventCardProps> = ({
           odds1: matchData.odds1,
           odds2: matchData.odds2,
           referee: matchData.referee,
+          weightclass: matchData.weightclass, // Make sure this is included
           eventDate: matchData.eventDate,
           prediction: prediction, // For immediate UI display
           prediction_data: prediction, // For backend consistency
           result: "pending"
         };
 
-        // Prepare match data for database
+        // Prepare match data for database - INCLUDE WEIGHTCLASS
         const matchPayload = {
           fighter1: matchData.fighter1,
           fighter2: matchData.fighter2,
           odds1: matchData.odds1,
           odds2: matchData.odds2,
           referee: matchData.referee,
+          weightclass: matchData.weightclass, // <-- CRITICAL: Include weightclass
           event_date: matchData.eventDate,
           prediction_data: prediction // Send the full prediction object
         };
@@ -145,7 +147,10 @@ const EventCard: React.FC<EventCardProps> = ({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    // Use the same date formatting logic to avoid timezone issues
+    const [year, month, day] = dateString.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -168,6 +173,13 @@ const EventCard: React.FC<EventCardProps> = ({
               placeholder="Event name"
             />
             <input
+              type="text"
+              value={editLocation}
+              onChange={(e) => setEditLocation(e.target.value)}
+              className="w-full px-3 py-2 text-gray-900 rounded-md"
+              placeholder="Location"
+            />
+            <input
               type="date"
               value={editDate}
               onChange={(e) => setEditDate(e.target.value)}
@@ -185,6 +197,7 @@ const EventCard: React.FC<EventCardProps> = ({
                   setIsEditing(false);
                   setEditName(event.name);
                   setEditDate(event.date);
+                  setEditLocation(event.location || '');
                 }}
                 className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-md text-sm"
               >
@@ -197,6 +210,9 @@ const EventCard: React.FC<EventCardProps> = ({
             <div>
               <h3 className="text-2xl font-bold">{event.name}</h3>
               <p className="text-blue-100 mt-1">{formatDate(event.date)}</p>
+              {event.location && (
+                <p className="text-blue-200 text-sm mt-1">{event.location}</p>
+              )}
               <div className="flex items-center gap-4 mt-2">
                 <span className="text-sm bg-blue-500 px-2 py-1 rounded">
                   {matches.length} match{matches.length !== 1 ? 'es' : ''}

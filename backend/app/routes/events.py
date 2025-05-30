@@ -409,3 +409,41 @@ async def delete_match(
         db.rollback()
         print(f"Error deleting match: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to delete match: {str(e)}")
+
+@router.get("/public-events")
+async def get_public_events(db: Session = Depends(get_db)):
+    """
+    Public endpoint: Get all events and matches for public display (no auth required).
+    """
+    try:
+        events = db.query(Event).options(selectinload(Event.matches)).order_by(Event.date.desc()).all()
+        events_data = []
+        for event in events:
+            matches_data = []
+            for match in (event.matches or []):
+                match_dict = {
+                    'id': str(match.id),
+                    'fighter1': match.fighter1,
+                    'fighter2': match.fighter2,
+                    'odds1': match.odds1,
+                    'odds2': match.odds2,
+                    'referee': match.referee,
+                    'weightclass': match.weightclass,
+                    'event_date': f"{match.event_date.isoformat()}T00:00:00Z",
+                    'result': match.result,
+                    'prediction_data': match.prediction_data,
+                    'created_at': match.created_at.isoformat()
+                }
+                matches_data.append(match_dict)
+            event_dict = {
+                'id': str(event.id),
+                'name': event.name,
+                'date': event.date.isoformat(),
+                'location': event.location,
+                'created_at': event.created_at.isoformat(),
+                'matches': matches_data
+            }
+            events_data.append(event_dict)
+        return events_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch public events: {str(e)}")

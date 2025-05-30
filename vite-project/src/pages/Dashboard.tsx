@@ -1,4 +1,3 @@
-// Dashboard.tsx
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,6 +12,18 @@ const Dashboard: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Helper function to format dates without timezone conversion issues
+  const formatDateForDisplay = (dateString: string) => {
+    // Split the date string and create date with local timezone
+    const [year, month, day] = dateString.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
 
   // Logout handler
   const handleLogout = () => {
@@ -86,10 +97,10 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleAddEvent = async (eventName: string, eventDate: string) => {
+  const handleAddEvent = async (eventName: string, eventDate: string, location: string) => {
     try {
       setError(null);
-      const response = await apiService.createEvent(eventName, eventDate);
+      const response = await apiService.createEvent(eventName, eventDate, location);
       if (response) {
         // Ensure the new event has a matches array
         const newEvent = { ...response, matches: response.matches || [] };
@@ -101,10 +112,10 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleUpdateEvent = async (eventId: string, newName: string, newDate: string) => {
+  const handleUpdateEvent = async (eventId: string, newName: string, newDate: string, newLocation: string) => {
     try {
       setError(null);
-      const response = await apiService.updateEvent(eventId, newName, newDate);
+      const response = await apiService.updateEvent(eventId, newName, newDate, newLocation);
       if (response) {
         setEvents(prev => prev.map(event => 
           event.id === eventId ? { ...response, matches: response.matches || event.matches || [] } : event
