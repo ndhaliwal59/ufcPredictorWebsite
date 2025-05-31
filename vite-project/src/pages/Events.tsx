@@ -35,15 +35,15 @@ export default function Events() {
   const [expandedMatches, setExpandedMatches] = useState<Record<string, boolean>>({});
   const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({});
 
-useEffect(() => {
-  apiService.getPublicEvents()
-    .then((data: PublicEvent[]) => {
-      setEvents(data);
-      if (data.length > 0) setExpandedEvents({ [data[0].id]: true });
-    })
-    .catch(err => setError(err.message))
-    .finally(() => setLoading(false));
-}, []);
+  useEffect(() => {
+    apiService.getPublicEvents()
+      .then((data: PublicEvent[]) => {
+        setEvents(data);
+        if (data.length > 0) setExpandedEvents({ [data[0].id]: true });
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   const toggleMatchExpansion = (matchId: string) => {
     setExpandedMatches(prev => ({
@@ -59,18 +59,15 @@ useEffect(() => {
     }));
   };
 
-const formatDate = (dateString: string) => {
-  // Parse as UTC and avoid Safari's local time interpretation
-  const date = new Date(Date.parse(dateString + "T00:00:00Z"));
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC"
-  });
-};
-
-
+  const formatDate = (dateString: string) => {
+    const date = new Date(Date.parse(dateString + "T00:00:00Z"));
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      timeZone: "UTC"
+    });
+  };
 
   const getConfidenceColor = (confidence: number) => {
     if (confidence >= 80) return "text-[#4DFF91]";
@@ -80,9 +77,13 @@ const formatDate = (dateString: string) => {
   };
 
   const getExpectedValueColor = (value: number) => {
-    if (value > 2) return "text-[#4DFF91]";
-    if (value > 0) return "text-white";
-    return "text-[#FF4D4D]";
+    if (value > 0.15) return "text-[#4DFF91]";
+    if (value < -0.15) return "text-[#FF4D4D]";
+    return "text-white";
+  };
+
+  const getLastName = (fullName: string) => {
+    return fullName.split(' ').pop() || fullName;
   };
 
   if (loading) {
@@ -179,57 +180,59 @@ const formatDate = (dateString: string) => {
                     <CardContent className="px-0 py-0">
                       <div className="divide-y divide-gray-700">
                         {event.matches?.map((match) => (
-                          <div key={match.id} className="px-6 py-6">
-                            <div className="flex flex-col lg:flex-row lg:items-center justify-between">
-                              <div className="flex items-center gap-4 mb-4 lg:mb-0 flex-grow">
-                                <div className="flex flex-col items-center">
-                                  <div className="w-10 h-10 bg-[#33C6FF]/20 rounded-full flex items-center justify-center mb-2">
-                                    <User className="h-5 w-5 text-[#33C6FF]" />
+                          <div key={match.id} className="px-6 py-8">
+                            <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+                              {/* Fighters, Predicted Winner, and Match Info Section */}
+                              <div className="flex items-center gap-6 flex-shrink-0">
+                                {/* Fighters Side-by-Side with VS */}
+                                <div className="flex items-center gap-4">
+                                  <div className="flex flex-col items-center">
+                                    <div className="w-10 h-10 bg-[#33C6FF]/20 rounded-full flex items-center justify-center mb-2">
+                                      <User className="h-5 w-5 text-[#33C6FF]" />
+                                    </div>
+                                    <div className="text-center w-24">
+                                      <p className="text-white font-medium">
+                                        {match.fighter1}
+                                      </p>
+                                    </div>
                                   </div>
-                                  <div className="text-center w-24">
-                                    <p className={`text-white font-medium ${
-                                      match.prediction_data?.predictedWinner === match.fighter1 ? 'text-[#4DFF91]' : ''
-                                    }`}>
-                                      {match.fighter1}
-                                      {match.prediction_data?.predictedWinner === match.fighter1 && (
-                                        <span className="inline-block ml-1">
-                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#4DFF91] inline" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                          </svg>
-                                        </span>
-                                      )}
-                                    </p>
+                                  <div className="flex items-center">
+                                    <div className="text-xl text-[#E0E0E0] font-bold px-2">VS</div>
                                   </div>
-                                </div>
-                                <div className="flex items-center">
-                                  <div className="text-xl text-[#E0E0E0] font-bold px-2">VS</div>
-                                </div>
-                                <div className="flex flex-col items-center">
-                                  <div className="w-10 h-10 bg-[#FF4D4D]/20 rounded-full flex items-center justify-center mb-2">
-                                    <User className="h-5 w-5 text-[#FF4D4D]" />
-                                  </div>
-                                  <div className="text-center w-24">
-                                    <p className={`text-white font-medium ${
-                                      match.prediction_data?.predictedWinner === match.fighter2 ? 'text-[#4DFF91]' : ''
-                                    }`}>
-                                      {match.fighter2}
-                                      {match.prediction_data?.predictedWinner === match.fighter2 && (
-                                        <span className="inline-block ml-1">
-                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#4DFF91] inline" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                          </svg>
-                                        </span>
-                                      )}
-                                    </p>
+                                  <div className="flex flex-col items-center">
+                                    <div className="w-10 h-10 bg-[#FF4D4D]/20 rounded-full flex items-center justify-center mb-2">
+                                      <User className="h-5 w-5 text-[#FF4D4D]" />
+                                    </div>
+                                    <div className="text-center w-24">
+                                      <p className="text-white font-medium">
+                                        {match.fighter2}
+                                      </p>
+                                    </div>
                                   </div>
                                 </div>
-                                <div className="flex flex-col sm:ml-4">
+
+                                {/* Predicted Winner Column */}
+                                {match.prediction_data?.predictedWinner && (
+                                  <div className="flex flex-col items-center gap-2 ml-8">
+                                    <div className="text-[#9CA3AF] text-sm font-medium">
+                                      Predicted Winner
+                                    </div>
+                                    <div className="text-[#4DFF91] text-lg font-bold">
+                                      {match.prediction_data.predictedWinner}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Match Info - Weight Class and Result with Equal Width */}
+                                <div className="flex flex-col items-center gap-2 ml-8">
                                   {match.weightclass && (
-                                    <div className="text-[#9CA3AF] text-sm">{match.weightclass}</div>
+                                    <div className="text-xs font-medium px-3 py-1 rounded-full bg-[#FFB84D]/20 text-[#FFB84D] min-w-[80px] text-center">
+                                      {match.weightclass}
+                                    </div>
                                   )}
                                   {match.result !== "pending" && (
                                     <div className={cn(
-                                      "text-xs font-medium px-2 py-1 rounded-full mt-1",
+                                      "text-xs font-medium px-3 py-1 rounded-full min-w-[80px] text-center",
                                       match.result === "hit" ? "bg-[#4DFF91]/20 text-[#4DFF91]" : "bg-[#FF4D4D]/20 text-[#FF4D4D]"
                                     )}>
                                       {match.result.toUpperCase()}
@@ -237,67 +240,84 @@ const formatDate = (dateString: string) => {
                                   )}
                                 </div>
                               </div>
+
+                              {/* Metrics Section with Separate Fighter Names Column */}
                               {match.prediction_data && (
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-8">
-                                  <div className="text-center">
-                                    <div className="text-[#9CA3AF] text-xs mb-1 flex items-center justify-center">
-                                      <Percent className="h-3 w-3 mr-1" />
-                                      CONFIDENCE
+                                <div className="flex items-center gap-4 ml-auto">
+                                  {/* Fighter Names Column */}
+                                  <div className="flex flex-col items-end gap-2 min-w-[80px]">
+                                    <div className="h-6"></div> {/* Spacer for header */}
+                                    <div className="text-[#9CA3AF] text-s text-right py-1">
+                                      {getLastName(match.fighter1)}
                                     </div>
-                                    <div className={cn("font-bold text-lg", getConfidenceColor(match.prediction_data.confidence || 0))}>
-                                      {match.prediction_data.confidence?.toFixed(0) || 0}%
-                                    </div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-[#9CA3AF] text-xs mb-1 flex items-center justify-center">
-                                      <BarChart className="h-3 w-3 mr-1" />
-                                      WIN %
-                                    </div>
-                                    <div className="text-white font-mono text-lg">
-                                      {match.prediction_data.predictedWinner === match.fighter1 
-                                        ? `${match.prediction_data.fighter1WinPercent?.toFixed(0) || 0}%`
-                                        : `${match.prediction_data.fighter2WinPercent?.toFixed(0) || 0}%`
-                                      }
+                                    <div className="text-[#9CA3AF] text-s text-right py-1">
+                                      {getLastName(match.fighter2)}
                                     </div>
                                   </div>
-                                  <div className="text-center">
-                                    <div className="text-[#9CA3AF] text-xs mb-1 flex items-center justify-center">
-                                      <DollarSign className="h-3 w-3 mr-1" />
-                                      ODDS
+
+                                  {/* Metrics Grid */}
+                                  <div className="grid grid-cols-3 gap-6">
+                                    <div className="text-center">
+                                      <div className="text-[#9CA3AF] text-sm mb-3 flex items-center justify-center font-medium">
+                                        <BarChart className="h-4 w-4 mr-2" />
+                                        WIN%
+                                      </div>
+                                      <div className="space-y-2">
+                                        <div className="text-white font-mono text-lg font-bold">
+                                          {match.prediction_data.fighter1WinPercent?.toFixed(0) || 0}%
+                                        </div>
+                                        <div className="text-white font-mono text-lg font-bold">
+                                          {match.prediction_data.fighter2WinPercent?.toFixed(0) || 0}%
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="text-white font-mono text-lg">
-                                      {match.prediction_data.predictedWinner === match.fighter1 
-                                        ? match.odds1
-                                        : match.odds2
-                                      }
+
+                                    <div className="text-center">
+                                      <div className="text-[#9CA3AF] text-sm mb-3 flex items-center justify-center font-medium">
+                                        <DollarSign className="h-4 w-4 mr-2" />
+                                        ODDS
+                                      </div>
+                                      <div className="space-y-2">
+                                        <div className="text-white font-mono text-lg font-bold">
+                                          {match.odds1}
+                                        </div>
+                                        <div className="text-white font-mono text-lg font-bold">
+                                          {match.odds2}
+                                        </div>
+                                      </div>
                                     </div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-[#9CA3AF] text-xs mb-1 flex items-center justify-center">
-                                      <TrendingUp className="h-3 w-3 mr-1" />
-                                      EV
-                                    </div>
-                                    <div className={cn(
-                                      "font-bold text-lg",
-                                      getExpectedValueColor(
-                                        match.prediction_data.predictedWinner === match.fighter1 
-                                          ? (match.prediction_data.fighter1EV || 0)
-                                          : (match.prediction_data.fighter2EV || 0)
-                                      )
-                                    )}>
-                                      {match.prediction_data.predictedWinner === match.fighter1 
-                                        ? (match.prediction_data.fighter1EV || 0) > 0 
-                                          ? `+${match.prediction_data.fighter1EV?.toFixed(1) || 0}%`
-                                          : `${match.prediction_data.fighter1EV?.toFixed(1) || 0}%`
-                                        : (match.prediction_data.fighter2EV || 0) > 0
-                                          ? `+${match.prediction_data.fighter2EV?.toFixed(1) || 0}%`
-                                          : `${match.prediction_data.fighter2EV?.toFixed(1) || 0}%`
-                                      }
+
+                                    <div className="text-center">
+                                      <div className="text-[#9CA3AF] text-sm mb-3 flex items-center justify-center font-medium">
+                                        <TrendingUp className="h-4 w-4 mr-2" />
+                                        EV
+                                      </div>
+                                      <div className="space-y-2">
+                                        <div className={cn(
+                                          "font-bold text-lg",
+                                          getExpectedValueColor(match.prediction_data.fighter1EV || 0)
+                                        )}>
+                                          {(match.prediction_data.fighter1EV || 0) > 0 
+                                            ? `+${match.prediction_data.fighter1EV?.toFixed(1) || 0}%`
+                                            : `${match.prediction_data.fighter1EV?.toFixed(1) || 0}%`
+                                          }
+                                        </div>
+                                        <div className={cn(
+                                          "font-bold text-lg",
+                                          getExpectedValueColor(match.prediction_data.fighter2EV || 0)
+                                        )}>
+                                          {(match.prediction_data.fighter2EV || 0) > 0
+                                            ? `+${match.prediction_data.fighter2EV?.toFixed(1) || 0}%`
+                                            : `${match.prediction_data.fighter2EV?.toFixed(1) || 0}%`
+                                          }
+                                        </div>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
                               )}
-                              <div className="ml-4 hidden lg:block">
+
+                              <div className="ml-4 hidden lg:block flex-shrink-0">
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -312,6 +332,7 @@ const formatDate = (dateString: string) => {
                                 </Button>
                               </div>
                             </div>
+
                             <div className="mt-4 flex justify-center lg:hidden">
                               <Button
                                 variant="outline"
@@ -331,53 +352,14 @@ const formatDate = (dateString: string) => {
                                 )}
                               </Button>
                             </div>
+
                             {expandedMatches[match.id] && match.prediction_data && (
                               <div className="mt-6 bg-[#182030] rounded-lg p-6 animate-in fade-in slide-in-from-top-5 duration-300">
-                                <h3 className="text-lg font-semibold text-white mb-4">Detailed Analysis</h3>
                                 <div className="space-y-6">
-                                  <div>
-                                    <h4 className="text-sm font-medium text-[#9CA3AF] mb-2">Win Probability</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                      <div className="bg-[#1E2530] p-4 rounded-lg">
-                                        <div className="text-white font-bold text-xl">
-                                          {match.prediction_data.fighter1WinPercent?.toFixed(1) || 0}%
-                                        </div>
-                                        <div className="text-[#9CA3AF] text-sm">{match.fighter1}</div>
-                                      </div>
-                                      <div className="bg-[#1E2530] p-4 rounded-lg">
-                                        <div className="text-white font-bold text-xl">
-                                          {match.prediction_data.fighter2WinPercent?.toFixed(1) || 0}%
-                                        </div>
-                                        <div className="text-[#9CA3AF] text-sm">{match.fighter2}</div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <h4 className="text-sm font-medium text-[#9CA3AF] mb-2">Expected Value</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                      <div className="bg-[#1E2530] p-4 rounded-lg">
-                                        <div className={cn(
-                                          "font-bold text-xl",
-                                          getExpectedValueColor(match.prediction_data.fighter1EV || 0)
-                                        )}>
-                                          {(match.prediction_data.fighter1EV || 0) > 0 ? '+' : ''}{match.prediction_data.fighter1EV?.toFixed(2) || 0}%
-                                        </div>
-                                        <div className="text-[#9CA3AF] text-sm">{match.fighter1} ({match.odds1})</div>
-                                      </div>
-                                      <div className="bg-[#1E2530] p-4 rounded-lg">
-                                        <div className={cn(
-                                          "font-bold text-xl",
-                                          getExpectedValueColor(match.prediction_data.fighter2EV || 0)
-                                        )}>
-                                          {(match.prediction_data.fighter2EV || 0) > 0 ? '+' : ''}{match.prediction_data.fighter2EV?.toFixed(2) || 0}%
-                                        </div>
-                                        <div className="text-[#9CA3AF] text-sm">{match.fighter2} ({match.odds2})</div>
-                                      </div>
-                                    </div>
-                                  </div>
+                                  {/* Win Method Predictions Only */}
                                   {(match.prediction_data.fighter1MethodPercentages || match.prediction_data.fighter2MethodPercentages) && (
                                     <div>
-                                      <h4 className="text-sm font-medium text-[#9CA3AF] mb-2">Win Method Predictions</h4>
+                                      <h4 className="text-sm font-medium text-[#9CA3AF] mb-4">Win Method Predictions</h4>
                                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {match.prediction_data.fighter1MethodPercentages && (
                                           <div className="bg-[#1E2530] p-4 rounded-lg">
@@ -408,6 +390,8 @@ const formatDate = (dateString: string) => {
                                       </div>
                                     </div>
                                   )}
+
+                                  {/* Feature Importance Graph Only */}
                                   {match.prediction_data.shapPlot && (
                                     <div>
                                       <h4 className="text-sm font-medium text-[#9CA3AF] mb-2">Feature Importance Analysis</h4>
@@ -420,21 +404,6 @@ const formatDate = (dateString: string) => {
                                       </div>
                                     </div>
                                   )}
-                                  <div>
-                                    <h4 className="text-sm font-medium text-[#9CA3AF] mb-2">Match Details</h4>
-                                    <div className="bg-[#1E2530] p-4 rounded-lg grid grid-cols-2 gap-4">
-                                      <div>
-                                        <span className="text-sm text-[#9CA3AF]">Referee:</span>
-                                        <div className="text-white font-medium">{match.referee}</div>
-                                      </div>
-                                      {match.weightclass && (
-                                        <div>
-                                          <span className="text-sm text-[#9CA3AF]">Weight Class:</span>
-                                          <div className="text-white font-medium">{match.weightclass}</div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
                                 </div>
                               </div>
                             )}
