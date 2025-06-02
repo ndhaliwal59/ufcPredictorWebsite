@@ -50,7 +50,6 @@ export default function Footer() {
             <ul className="space-y-3">
               <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors duration-200">Kaggle</a></li>
               <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors duration-200">GitHub Repository</a></li>
-              <li><a href="/how-it-works#methodology" className="text-[#9CA3AF] hover:text-white transition-colors duration-200">Methodology</a></li>
               <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors duration-200">LinkedIn</a></li>
             </ul>
           </div>
