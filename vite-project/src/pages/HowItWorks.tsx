@@ -353,7 +353,7 @@ export default function HowItWorks() {
                   <div className="p-6">
                     <Button
                       variant="ghost"
-                      className="w-full flex justify-between items-center text-left p-0 h-auto"
+                      className="w-full flex justify-between items-center text-left p-0 h-auto hover:bg-transparent"
                       onClick={() => toggleFaq(index)}
                     >
                       <span className="text-lg font-medium text-white">{faq.question}</span>

@@ -48,9 +48,22 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-bold mb-4">Resources</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors duration-200">Kaggle</a></li>
-              <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors duration-200">GitHub Repository</a></li>
-              <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors duration-200">LinkedIn</a></li>
+              <li>
+                <a href="https://www.kaggle.com/code/nishandhaliwal06/ufc-predictor-72-04-accuracy" className="text-[#9CA3AF] hover:text-white transition-colors duration-200" target="_blank" rel="noopener noreferrer">
+                  Kaggle
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="https://github.com/ndhaliwal59/ufcPredictorWebsite" className="text-[#9CA3AF] hover:text-white transition-colors duration-200" target="_blank" rel="noopener noreferrer">
+                  GitHub Repository
+                </a>
+              </li>
+              <li>
+                <a href="https://www.linkedin.com/in/nishan-dhaliwal-034922238" className="text-[#9CA3AF] hover:text-white transition-colors duration-200" target="_blank" rel="noopener noreferrer">
+                  LinkedIn
+                </a>
+              </li>
             </ul>
           </div>
         </div>

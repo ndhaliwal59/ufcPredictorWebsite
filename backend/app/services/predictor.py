@@ -747,8 +747,7 @@ class UFCPredictor:
             predicted_winner = p1_name if p1_prob > 0.5 else p2_name
             
             # Add title
-            ax.set_title(f'SHAP Feature Analysis: {p1_name} vs {p2_name}\nPredicted Winner: {predicted_winner} ({max(p1_prob, 1-p1_prob):.1%} confidence)\n(Showing features with >{MIN_THRESHOLD:.1%} impact)', 
-                        color='white', fontsize=16, fontweight='bold', pad=25)
+            ax.set_title(f'SHAP Feature Analysis: {p1_name} vs {p2_name}\nPredicted Winner: {predicted_winner} ({max(p1_prob, 1-p1_prob):.1%}', color='white', fontsize=16, fontweight='bold', pad=25)
             
             # Create legend for categories
             from matplotlib.patches import Patch
