@@ -13,18 +13,6 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Helper function to format dates without timezone conversion issues
-  const formatDateForDisplay = (dateString: string) => {
-    // Split the date string and create date with local timezone
-    const [year, month, day] = dateString.split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
   // Logout handler
   const handleLogout = () => {
     logout();
@@ -40,20 +28,15 @@ const Dashboard: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('=== LOADING EVENTS FROM API ===');
       
       const response = await apiService.getEvents();
-      console.log('Raw API response:', response);
       
       if (Array.isArray(response)) {
-        console.log(`Received ${response.length} events`);
         
         // Transform the response to match frontend expectations
         const eventsWithMatches = response.map(event => ({
           ...event,
           matches: (event.matches || []).map((match: any) => {
-            console.log(`Processing match: ${match.fighter1} vs ${match.fighter2}`);
-            console.log('Match prediction_data:', match.prediction_data);
             
             return {
               ...match,
@@ -64,25 +47,6 @@ const Dashboard: React.FC = () => {
             };
           })
         }));
-        
-        // Log each event and its matches after transformation
-        eventsWithMatches.forEach((event, eventIndex) => {
-          console.log(`\nTransformed Event ${eventIndex}: ${event.name}`);
-          console.log(`  Has ${event.matches?.length || 0} matches`);
-          
-          if (event.matches) {
-            event.matches.forEach((match: Match, matchIndex: number) => {
-              console.log(`  Match ${matchIndex}: ${match.fighter1} vs ${match.fighter2}`);
-              console.log(`    Has prediction:`, !!match.prediction);
-              console.log(`    Has prediction_data:`, !!match.prediction_data);
-              
-              if (match.prediction) {
-                console.log(`    Fighter1 methods:`, match.prediction.fighter1MethodPercentages);
-                console.log(`    Fighter2 methods:`, match.prediction.fighter2MethodPercentages);
-              }
-            });
-          }
-        });
         
         setEvents(eventsWithMatches);
       } else {

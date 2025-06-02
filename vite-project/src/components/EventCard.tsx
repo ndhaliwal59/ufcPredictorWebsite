@@ -44,8 +44,6 @@ const EventCard: React.FC<EventCardProps> = ({
     setError(null);
     
     try {
-      console.log('=== MATCH CREATION DEBUG ===');
-      console.log('1. Original match data:', matchData);
 
       // Get prediction from ML model
       const response = await apiService.getPrediction(
@@ -55,8 +53,6 @@ const EventCard: React.FC<EventCardProps> = ({
         matchData.referee
       );
 
-      console.log('2. Raw prediction response:', response);
-
       if (response.success) {
         // Transform the backend response to frontend format
         const prediction = transformBackendResponse(
@@ -64,10 +60,6 @@ const EventCard: React.FC<EventCardProps> = ({
           matchData.odds1,
           matchData.odds2
         );
-
-        console.log('3. Transformed prediction:', prediction);
-        console.log('4. Method predictions - Fighter 1:', prediction.fighter1MethodPercentages);
-        console.log('5. Method predictions - Fighter 2:', prediction.fighter2MethodPercentages);
 
         // Create the new match object with both prediction fields
         const newMatch: Match = {
@@ -96,11 +88,8 @@ const EventCard: React.FC<EventCardProps> = ({
           prediction_data: prediction // Send the full prediction object
         };
 
-        console.log('6. Match payload being sent to API:', matchPayload);
-
         // Create match in database
         const matchResponse = await apiService.createMatch(event.id, matchPayload);
-        console.log('7. Match creation response from database:', matchResponse);
 
         if (matchResponse) {
           // Update the match with the real ID from backend
@@ -111,14 +100,10 @@ const EventCard: React.FC<EventCardProps> = ({
             prediction_data: matchResponse.prediction_data || prediction
           };
 
-          console.log('8. Final match object:', finalMatch);
-          console.log('9. Final match prediction methods:', finalMatch.prediction?.fighter1MethodPercentages);
-
           const updatedMatches = [...matches, finalMatch];
           setMatches(updatedMatches);
           onUpdateMatches(event.id, updatedMatches);
           
-          console.log('=== MATCH CREATION SUCCESS ===');
         }
       } else {
         throw new Error('Failed to generate prediction');

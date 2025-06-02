@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { CalendarDays, MapPin, ChevronDown, ChevronUp, BarChart, Percent, DollarSign, TrendingUp, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CalendarDays, MapPin, ChevronDown, ChevronUp, BarChart, DollarSign, TrendingUp, User } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -67,13 +67,6 @@ export default function Events() {
       day: "numeric",
       timeZone: "UTC"
     });
-  };
-
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 80) return "text-[#4DFF91]";
-    if (confidence >= 60) return "text-[#33C6FF]";
-    if (confidence >= 40) return "text-[#FFB84D]";
-    return "text-[#FF4D4D]";
   };
 
   const getExpectedValueColor = (value: number) => {

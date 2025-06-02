@@ -23,9 +23,6 @@ export function calculateEV(winPercent: number, odds: string): number {
   // Convert American odds to decimal odds
   const decimalOdds = numericOdds > 0 ? (numericOdds / 100) + 1 : (100 / Math.abs(numericOdds)) + 1;
   
-  // Calculate implied probability from odds
-  const impliedProbability = 1 / decimalOdds;
-  
   // Calculate Expected Value: (Win Probability * Payout) - (Loss Probability * Stake)
   const winProbability = winPercent / 100;
   const lossProbability = 1 - winProbability;

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { 
   Database, Brain, BarChart3, ArrowDown, PieChart, Workflow, 
-  CheckCircle, HelpCircle, ChevronDown, ChevronUp, LineChart
+  CheckCircle, HelpCircle, ChevronDown, ChevronUp
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { FAQ } from "@/lib/types";

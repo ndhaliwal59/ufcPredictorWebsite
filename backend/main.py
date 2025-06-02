@@ -1,10 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from pydantic import BaseModel
-from typing import Union
+import os
+RENDER_FRONTEND_URL = os.getenv("RENDER_FRONTEND_URL", "")
 
 # Add these new imports for UFC prediction functionality
 from contextlib import asynccontextmanager
@@ -92,6 +93,9 @@ origins = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173", 
 ]
+
+if RENDER_FRONTEND_URL:
+    origins.append(RENDER_FRONTEND_URL)
 
 app.add_middleware(
     CORSMiddleware,

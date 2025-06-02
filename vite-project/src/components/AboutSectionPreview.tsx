@@ -1,5 +1,3 @@
-import { Button } from "@/components/ui/button";
-
 export default function AboutSectionPreview() {
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-[#1E2530]/30" id="about">
