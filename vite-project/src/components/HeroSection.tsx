@@ -19,7 +19,7 @@ export default function HeroSection() {
               <span className="text-[#33C6FF]">AI</span> vs The Bookies.
             </h1>
             <p className="mt-6 text-lg sm:text-xl text-[#E0E0E0] max-w-xl">
-              We predict UFC fight outcomes using AI and compare our odds with major sportsbooks.
+              We predict UFC fight outcomes using AI to gain an edge over major sportsbooks.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
               <Button asChild className="gradient-button text-white px-8 py-7 rounded-lg font-bold text-lg h-auto">
@@ -52,7 +52,7 @@ export default function HeroSection() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-[#9CA3AF]">AI accuracy rate</p>
-                  <p className="text-xl font-bold text-white">67.44%</p>
+                  <p className="text-xl font-bold text-white">67.41%</p>
                 </div>
               </div>
             </div>

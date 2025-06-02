@@ -17,14 +17,11 @@ export default function AboutSectionPreview() {
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">About the Project</h2>
             <p className="text-[#E0E0E0] text-lg mb-6">
               UFCPredictor started as a passion project combining deep learning and combat sports analytics. 
-              Our team of data scientists and MMA enthusiasts built a prediction engine that rivals professional oddsmakers.
+              What began as a personal challenge to apply machine learning in a real-world setting has evolved into a fully self-taught journey of experimentation and growth.
             </p>
             <p className="text-[#E0E0E0] text-lg mb-8">
-              We're continuously improving our models with each event, learning from both successes and misses to provide the most accurate predictions possible.
+              I'm continuously improving the models with each event, learning from both successes and misses to provide the most accurate predictions possible. Every line of code and every prediction reflects countless hours of self-driven learning and a deep love for the sport.
             </p>
-            <Button className="gradient-button text-white px-6 py-3 rounded-lg font-bold h-auto">
-              Read Our Full Story
-            </Button>
           </div>
         </div>
       </div>

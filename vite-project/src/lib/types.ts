@@ -13,6 +13,8 @@ export interface FightPrediction {
   ourOddsB: string;
   bookieOddsA: string;
   bookieOddsB: string;
+  evA: number; // Add EV for fighter A
+  evB: number; // Add EV for fighter B
   hasValue: boolean;
   valueOn: 'A' | 'B' | null;
   event: string;

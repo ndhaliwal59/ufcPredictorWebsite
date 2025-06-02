@@ -9,23 +9,36 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { FAQ } from "@/lib/types";
+import featureGraph from '../assets/feature_graph.png';
+import matrix from '../assets/confusion_matrix.png';
+import curve from '../assets/learning_curve.png';
 
 export default function HowItWorks() {
   // Sample FAQ data
   const faqs: FAQ[] = [
     {
       question: "How accurate is the model?",
-      answer: "Our model has demonstrated an accuracy rate of 68.7% across all UFC fights in the past 24 months. This accuracy varies by weight class and fight type, with title fights having a slightly higher prediction accuracy of 72.3%. We continuously update and refine our models with each event to improve performance."
+      answer: "The model currently has an accuracy rate of 67.41% based on historical UFC fight data. We’re still in the process of collecting more real-world data and actively testing the system to further validate and improve performance over time."
+    },
+    {
+      question: "Why not use models with higher accuracy?",
+      answer: "While some models — particularly neural networks — can show higher accuracy during testing, they often suffer from issues like data leakage and overfitting, especially if the data isn't sorted chronologically. Additionally, decision tree-based models can develop a bias toward the first fighter listed (often the red corner), who statistically wins around 60-65% of the time. My selected model may not have the absolute highest accuracy, but it avoids these pitfalls and provides the most reliable and time-aware predictions in real-world scenarios."
     },
     {
       question: "Where do you get your data?",
-      answer: "We collect data from multiple official UFC statistics providers, compiling comprehensive fight statistics, fighter histories, and performance metrics. All data is ethically scraped from public sources and processed through our proprietary cleaning pipeline to ensure consistency and accuracy."
+      answer: "We collect data from ufcstats.com, compiling comprehensive fight statistics, fighter histories, and performance metrics. All data is scraped from public sources and processed through our proprietary cleaning pipeline to ensure consistency and accuracy."
     },
     {
       question: "How often are predictions updated?",
       answer: "Predictions are updated weekly, with additional updates occurring before each UFC event as new information becomes available (such as weigh-in results, last-minute injuries, or other relevant factors that might impact fight outcomes)."
+    },
+    {
+      question: "Is this project open-source?",
+      answer: "Yes, this project is fully open-source. The code for the website is available on GitHub, and the entire process of building the fight outcome predictor — including data collection, cleaning, feature engineering, and model training — is documented and shared on Kaggle. Links can be found in the footer"
     }
+
   ];
+
 
   // State to track which FAQ items are expanded
   const [expandedFaqs, setExpandedFaqs] = useState<Record<number, boolean>>({
@@ -43,7 +56,6 @@ export default function HowItWorks() {
   return (
     <div className="min-h-screen flex flex-col bg-[#0A0F16]">
       <Navbar />
-      
       <main className="flex-grow pt-28 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Hero/Header */}
@@ -74,13 +86,13 @@ export default function HowItWorks() {
                   </div>
                   <div className="pl-14">
                     <p className="text-[#E0E0E0] mb-4">
-                      Our data collection system gathers comprehensive fight statistics from multiple sources:
+                      I’ve developed custom Python scripts that I manually run to scrape up-to-date fight statistics from ufcstats.com. These scripts form the foundation of the data powering my models.
                     </p>
                     <ul className="list-disc pl-5 text-[#E0E0E0] space-y-2">
-                      <li>Fighter biographical information and physical attributes</li>
-                      <li>Detailed performance metrics from previous fights</li>
-                      <li>Historical fight outcomes and methods of victory</li>
-                      <li>Betting odds from major sportsbooks</li>
+                      <li>Scraping fighter data and fight records from UFCStats.com</li>
+                      <li>Fighter biographical details and physical attributes</li>
+                      <li>Performance metrics from past matchups</li>
+                      <li>Historical results and methods of victory</li>
                     </ul>
                   </div>
                 </div>
@@ -102,13 +114,13 @@ export default function HowItWorks() {
                   </div>
                   <div className="pl-14">
                     <p className="text-[#E0E0E0] mb-4">
-                      Raw data undergoes rigorous cleaning and standardization:
+                      Raw data undergoes cleaning and transformation to ensure consistency and usability:
                     </p>
                     <ul className="list-disc pl-5 text-[#E0E0E0] space-y-2">
-                      <li>Handling missing values and outliers</li>
-                      <li>Normalizing statistics across different fight durations</li>
-                      <li>Converting categorical variables to numerical representations</li>
-                      <li>Implementing data quality checks and validation</li>
+                      <li>Handling missing values and removing outliers</li>
+                      <li>Standardizing formats: converting percentages to decimals and time to seconds</li>
+                      <li>Normalizing numerical features for better model performance</li>
+                      <li>Encoding categorical variables like stance and outcome types</li>
                     </ul>
                   </div>
                 </div>
@@ -133,10 +145,10 @@ export default function HowItWorks() {
                       Creating meaningful features from the raw data:
                     </p>
                     <ul className="list-disc pl-5 text-[#E0E0E0] space-y-2">
-                      <li>Calculating advanced metrics (e.g., striking efficiency, defensive rating)</li>
+                      <li>Calculated advanced metrics like estimated moving averages (EMA) for various features</li>
                       <li>Generating relative performance indicators between fighters</li>
-                      <li>Creating time-based features to capture career trajectories</li>
-                      <li>Style matchup analysis and historical pattern recognition</li>
+                      <li>Creating age-adjusted features to capture career trajectories</li>
+                      <li>Building matchup-specific stats to reflect fighter advantages and tendencies</li>
                     </ul>
                   </div>
                 </div>
@@ -158,13 +170,13 @@ export default function HowItWorks() {
                   </div>
                   <div className="pl-14">
                     <p className="text-[#E0E0E0] mb-4">
-                      Training our machine learning models with rigorous validation:
+                      Training and evaluating multiple machine learning models to identify the best performer:
                     </p>
                     <ul className="list-disc pl-5 text-[#E0E0E0] space-y-2">
-                      <li>Ensemble of gradient-boosted trees and neural networks</li>
+                      <li>Tested multiple models and got the best performance form XGBoost</li>
                       <li>Cross-validation to prevent overfitting</li>
                       <li>Hyperparameter optimization for model tuning</li>
-                      <li>Backtesting against historical fight outcomes</li>
+                      <li>Backtested on historical fight data to assess real-world performance</li>
                     </ul>
                   </div>
                 </div>
@@ -189,10 +201,9 @@ export default function HowItWorks() {
                       Final output generation process:
                     </p>
                     <ul className="list-disc pl-5 text-[#E0E0E0] space-y-2">
-                      <li>Probability estimates for each fighter's victory</li>
-                      <li>Conversion to implied odds and comparison with sportsbooks</li>
-                      <li>Value calculation based on probability and offered odds</li>
-                      <li>Confidence rating and prediction explanation generation</li>
+                      <li>Probability estimates for each fighter's victory and method of victory</li>
+                      <li>Expected Value calculations using probability</li>
+                      <li>Model interpretation through SHAP value plots to explain prediction reasoning</li>
                     </ul>
                   </div>
                 </div>
@@ -210,222 +221,121 @@ export default function HowItWorks() {
             
             <div className="space-y-8">
               {/* Model Accuracy */}
-              <Card className="bg-[#1E2530] border-0 overflow-hidden">
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-white mb-4">Model Accuracy</h3>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <p className="text-[#E0E0E0] mb-4">
-                        Our model has been tested against thousands of historical UFC fights, demonstrating consistent predictive power across different weight classes and fight types.
-                      </p>
-                      <div className="space-y-3">
-                        <div>
-                          <div className="flex justify-between mb-1">
-                            <span className="text-sm text-[#9CA3AF]">Overall Accuracy</span>
-                            <span className="text-sm text-white font-medium">68.7%</span>
-                          </div>
-                          <div className="w-full bg-gray-700 rounded-full h-2.5">
-                            <div className="bg-[#33C6FF] h-2.5 rounded-full" style={{ width: '68.7%' }}></div>
-                          </div>
+            <Card className="bg-[#1E2530] border-0 overflow-hidden">
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-white mb-4">Model Performance</h3>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <p className="text-[#E0E0E0] mb-4 md:col-span-2">
+                    Our XGBoost model performance metrics evaluated on test data, showing precision, recall, and F1-scores for both classes in UFC fight outcome prediction.
+                  </p>
+                  
+                  {/* Class 0 Metrics */}
+                  <div className="bg-[#182030] rounded-lg p-4">
+                    <h4 className="text-white font-medium mb-3">Class 0 Performance</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm text-[#9CA3AF]">Precision</span>
+                          <span className="text-sm text-white font-medium">68.2%</span>
                         </div>
-                        <div>
-                          <div className="flex justify-between mb-1">
-                            <span className="text-sm text-[#9CA3AF]">Title Fight Accuracy</span>
-                            <span className="text-sm text-white font-medium">72.3%</span>
-                          </div>
-                          <div className="w-full bg-gray-700 rounded-full h-2.5">
-                            <div className="bg-[#33C6FF] h-2.5 rounded-full" style={{ width: '72.3%' }}></div>
-                          </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2.5">
+                          <div className="bg-[#33C6FF] h-2.5 rounded-full" style={{ width: '68.2%' }}></div>
                         </div>
-                        <div>
-                          <div className="flex justify-between mb-1">
-                            <span className="text-sm text-[#9CA3AF]">Value Bet Accuracy</span>
-                            <span className="text-sm text-white font-medium">61.5%</span>
-                          </div>
-                          <div className="w-full bg-gray-700 rounded-full h-2.5">
-                            <div className="bg-[#4DFF91] h-2.5 rounded-full" style={{ width: '61.5%' }}></div>
-                          </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm text-[#9CA3AF]">Recall</span>
+                          <span className="text-sm text-white font-medium">67.4%</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2.5">
+                          <div className="bg-[#4DFF91] h-2.5 rounded-full" style={{ width: '67.4%' }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm text-[#9CA3AF]">F1-Score</span>
+                          <span className="text-sm text-white font-medium">67.8%</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2.5">
+                          <div className="bg-[#FF4D4D] h-2.5 rounded-full" style={{ width: '67.8%' }}></div>
                         </div>
                       </div>
                     </div>
-                    <div className="bg-[#182030] rounded-lg p-4">
-                      <h4 className="text-white font-medium mb-3">Accuracy by Weight Class</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[#9CA3AF]">Heavyweight</span>
-                          <div className="flex items-center">
-                            <div className="w-24 bg-gray-700 rounded-full h-2 mr-2">
-                              <div className="bg-[#FF4D4D] h-2 rounded-full" style={{ width: '63%' }}></div>
-                            </div>
-                            <span className="text-white text-sm">63%</span>
-                          </div>
+                  </div>
+
+                  {/* Class 1 Metrics */}
+                  <div className="bg-[#182030] rounded-lg p-4">
+                    <h4 className="text-white font-medium mb-3">Class 1 Performance</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm text-[#9CA3AF]">Precision</span>
+                          <span className="text-sm text-white font-medium">66.6%</span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[#9CA3AF]">Light Heavyweight</span>
-                          <div className="flex items-center">
-                            <div className="w-24 bg-gray-700 rounded-full h-2 mr-2">
-                              <div className="bg-[#FF4D4D] h-2 rounded-full" style={{ width: '67%' }}></div>
-                            </div>
-                            <span className="text-white text-sm">67%</span>
-                          </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2.5">
+                          <div className="bg-[#33C6FF] h-2.5 rounded-full" style={{ width: '66.6%' }}></div>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[#9CA3AF]">Middleweight</span>
-                          <div className="flex items-center">
-                            <div className="w-24 bg-gray-700 rounded-full h-2 mr-2">
-                              <div className="bg-[#FF4D4D] h-2 rounded-full" style={{ width: '69%' }}></div>
-                            </div>
-                            <span className="text-white text-sm">69%</span>
-                          </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm text-[#9CA3AF]">Recall</span>
+                          <span className="text-sm text-white font-medium">67.4%</span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[#9CA3AF]">Welterweight</span>
-                          <div className="flex items-center">
-                            <div className="w-24 bg-gray-700 rounded-full h-2 mr-2">
-                              <div className="bg-[#FF4D4D] h-2 rounded-full" style={{ width: '71%' }}></div>
-                            </div>
-                            <span className="text-white text-sm">71%</span>
-                          </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2.5">
+                          <div className="bg-[#4DFF91] h-2.5 rounded-full" style={{ width: '67.4%' }}></div>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[#9CA3AF]">Lightweight</span>
-                          <div className="flex items-center">
-                            <div className="w-24 bg-gray-700 rounded-full h-2 mr-2">
-                              <div className="bg-[#33C6FF] h-2 rounded-full" style={{ width: '72%' }}></div>
-                            </div>
-                            <span className="text-white text-sm">72%</span>
-                          </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm text-[#9CA3AF]">F1-Score</span>
+                          <span className="text-sm text-white font-medium">67.0%</span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[#9CA3AF]">Featherweight</span>
-                          <div className="flex items-center">
-                            <div className="w-24 bg-gray-700 rounded-full h-2 mr-2">
-                              <div className="bg-[#33C6FF] h-2 rounded-full" style={{ width: '70%' }}></div>
-                            </div>
-                            <span className="text-white text-sm">70%</span>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[#9CA3AF]">Bantamweight</span>
-                          <div className="flex items-center">
-                            <div className="w-24 bg-gray-700 rounded-full h-2 mr-2">
-                              <div className="bg-[#33C6FF] h-2 rounded-full" style={{ width: '68%' }}></div>
-                            </div>
-                            <span className="text-white text-sm">68%</span>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[#9CA3AF]">Flyweight</span>
-                          <div className="flex items-center">
-                            <div className="w-24 bg-gray-700 rounded-full h-2 mr-2">
-                              <div className="bg-[#33C6FF] h-2 rounded-full" style={{ width: '69%' }}></div>
-                            </div>
-                            <span className="text-white text-sm">69%</span>
-                          </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2.5">
+                          <div className="bg-[#FF4D4D] h-2.5 rounded-full" style={{ width: '67.0%' }}></div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </Card>
-              
+              </div>
+            </Card>
+       
               {/* Features Used */}
               <Card className="bg-[#1E2530] border-0 overflow-hidden">
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-white mb-4">Features Used</h3>
+                  <h3 className="text-xl font-bold text-white mb-4">Features Importance</h3>
                   <p className="text-[#E0E0E0] mb-6">
-                    Our model analyzes over 200 distinct features for each fighter and matchup. Here are the major categories of features and their relative importance:
+                    Our model analyzes 173 distinct features for each fighter and matchup. Here are the most influential features:
                   </p>
-                  
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-[#9CA3AF]">Strike Statistics</span>
-                          <span className="text-sm text-white font-medium">27%</span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2.5">
-                          <div className="bg-[#FF4D4D] h-2.5 rounded-full" style={{ width: '27%' }}></div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-[#9CA3AF]">Grappling Metrics</span>
-                          <span className="text-sm text-white font-medium">23%</span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2.5">
-                          <div className="bg-[#FF4D4D] h-2.5 rounded-full" style={{ width: '23%' }}></div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-[#9CA3AF]">Fight History</span>
-                          <span className="text-sm text-white font-medium">18%</span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2.5">
-                          <div className="bg-[#33C6FF] h-2.5 rounded-full" style={{ width: '18%' }}></div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-[#9CA3AF]">Physical Attributes</span>
-                          <span className="text-sm text-white font-medium">12%</span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2.5">
-                          <div className="bg-[#33C6FF] h-2.5 rounded-full" style={{ width: '12%' }}></div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-[#9CA3AF]">Form & Momentum</span>
-                          <span className="text-sm text-white font-medium">11%</span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2.5">
-                          <div className="bg-[#33C6FF] h-2.5 rounded-full" style={{ width: '11%' }}></div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-[#9CA3AF]">Stylistic Matchup</span>
-                          <span className="text-sm text-white font-medium">9%</span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2.5">
-                          <div className="bg-[#4DFF91] h-2.5 rounded-full" style={{ width: '9%' }}></div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-[#182030] rounded-lg p-4">
-                      <h4 className="text-white font-medium mb-3">Key Performance Indicators</h4>
-                      <ul className="list-disc pl-5 text-[#E0E0E0] space-y-2">
-                        <li>Significant strikes landed per minute</li>
-                        <li>Striking accuracy percentage</li>
-                        <li>Takedown defense rate</li>
-                        <li>Submission attempts per 15 minutes</li>
-                        <li>Strike differential (landed vs. absorbed)</li>
-                        <li>Knockout/submission ratio</li>
-                        <li>Average fight time</li>
-                        <li>Recovery capability metrics</li>
-                        <li>Performance against common opponents</li>
-                        <li>Win streak and quality of opposition</li>
-                      </ul>
-                    </div>
+                  <div className="mb-6">
+                    <img 
+                      src= {featureGraph}
+                      alt="Top 20 Most Important Features"
+                      className="w-full h-auto rounded-lg border border-gray-600"
+                    />
                   </div>
                 </div>
               </Card>
               
               {/* Visualization Placeholder */}
               <Card className="bg-[#1E2530] border-0 overflow-hidden">
-                <div className="p-6">
+                <div className="p-6" >
                   <h3 className="text-xl font-bold text-white mb-4">Model Performance Visualization</h3>
-                  <div className="bg-[#182030] rounded-lg p-8 flex flex-col items-center justify-center min-h-[300px]">
-                    <LineChart className="h-16 w-16 text-[#33C6FF] mb-4" />
-                    <p className="text-[#9CA3AF] text-center max-w-md">
-                      This space will contain interactive visualization charts showing model performance over time, ROI metrics, and prediction accuracy by different fight factors (weight class, fight style, etc.)
-                    </p>
+                  <div className="flex flex-col space-y-6">
+                    <img 
+                      src={curve} 
+                      alt="Learning Curve" 
+                      className="w-full h-auto rounded-lg border border-gray-600" 
+                    />
+                    <img 
+                      src={matrix} 
+                      alt="Confusion Matrix" 
+                      className="w-full h-auto rounded-lg border border-gray-600" 
+                    />
                   </div>
                 </div>
               </Card>
+
             </div>
           </section>
           
