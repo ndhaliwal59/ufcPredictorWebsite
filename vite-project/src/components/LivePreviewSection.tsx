@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { User, TrendingUp, DollarSign } from "lucide-react";
+import { Link } from "wouter"; // Add this import
 import { FightPrediction } from "@/lib/types";
 
 interface LivePreviewSectionProps {
@@ -129,9 +130,9 @@ export default function LivePreviewSection({ fights, loading = false, error = nu
 
         <div className="text-center mt-12">
           <Button asChild className="gradient-button text-white px-8 py-3 rounded-lg font-bold text-lg h-auto">
-            <a href="/events">
+            <Link href="/events">
               View All Upcoming Events
-            </a>
+            </Link>
           </Button>
         </div>
       </div>

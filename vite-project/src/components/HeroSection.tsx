@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import myImage from '../assets/r504811_1296x864_3-2.jpg';
+import { Link } from "wouter";
 
 export default function HeroSection() {
   return (
@@ -21,19 +22,19 @@ export default function HeroSection() {
             <p className="mt-6 text-lg sm:text-xl text-[#E0E0E0] max-w-xl">
               We predict UFC fight outcomes using AI to gain an edge over major sportsbooks.
             </p>
-            <div className="mt-10 flex flex-wrap gap-4">
-              <Button asChild className="gradient-button text-white px-8 py-7 rounded-lg font-bold text-lg h-auto">
-                <a href="/events">
-                  View Events
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </a>
-              </Button>
-              <Button asChild variant="outline" className="bg-[#1E2530] text-white border-none px-8 py-7 rounded-lg font-bold text-lg hover:bg-gray-700 transition duration-300 h-auto">
-                <a href="/how-it-works">
-                  How It Works
-                </a>
-              </Button> 
-            </div>
+          <div className="mt-10 flex flex-wrap gap-4">
+            <Button asChild className="gradient-button text-white px-8 py-7 rounded-lg font-bold text-lg h-auto">
+              <Link href="/events">
+                View Events
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="bg-[#1E2530] text-white border-none px-8 py-7 rounded-lg font-bold text-lg hover:bg-gray-700 transition duration-300 h-auto">
+              <Link href="/how-it-works">
+                How It Works
+              </Link>
+            </Button> 
+          </div>
           </div>
           <div className="section-fade visible relative">
             {/* A high-energy shot of UFC fighters during an intense match */}

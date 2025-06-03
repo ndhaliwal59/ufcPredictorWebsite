@@ -6,7 +6,6 @@ import HowItWorksSection from "@/components/HowItWorksSection";
 import WhyUseThisSection from "@/components/WhyUseThisSection";
 import TestimonialSection from "@/components/TestimonialSection";
 import AboutSectionPreview from "@/components/AboutSectionPreview";
-import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 import { FightPrediction, Feature, Step, Testimonial } from "@/lib/types";
 import { apiService } from "@/services/api";
@@ -307,7 +306,6 @@ export default function Home() {
       <WhyUseThisSection features={features} />
       <TestimonialSection testimonial={testimonial} />
       <AboutSectionPreview />
-      <CTASection />
       <Footer />
     </div>
   );
