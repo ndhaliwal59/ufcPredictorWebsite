@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 from pydantic import BaseModel
 import os
+from app.routes import general
 RENDER_FRONTEND_URL = os.getenv("RENDER_FRONTEND_URL", "")
 
 # Add these new imports for UFC prediction functionality
@@ -152,6 +153,12 @@ async def root():
     return {"message": "UFC Predictions API with Dashboard is running"}
 
 # Include all routes
+try:
+    app.include_router(general.router, prefix="/api", tags=["general"])
+    print("General routes added successfully")
+except Exception as e:
+    print(f"Could not add general routes: {e}")
+
 try:
     app.include_router(predictions.router, prefix="/api/predictions", tags=["predictions"])
     print("UFC prediction routes added successfully")
