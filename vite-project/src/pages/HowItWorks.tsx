@@ -21,7 +21,7 @@ export default function HowItWorks() {
       answer: "The model currently has an accuracy rate of 67.41% based on historical UFC fight data. We’re still in the process of collecting more real-world data and actively testing the system to further validate and improve performance over time."
     },
     {
-      question: "Why not use models with higher accuracy?",
+      question: "Why not use other models with higher accuracy?",
       answer: "While some models — particularly neural networks — can show higher accuracy during testing, they often suffer from issues like data leakage and overfitting, especially if the data isn't sorted chronologically. Additionally, decision tree-based models can develop a bias toward the first fighter listed (often the red corner), who statistically wins around 60-65% of the time. My selected model may not have the absolute highest accuracy, but it avoids these pitfalls and provides the most reliable and time-aware predictions in real-world scenarios."
     },
     {
