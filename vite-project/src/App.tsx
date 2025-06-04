@@ -9,21 +9,21 @@ import Dashboard from "@/pages/Dashboard";
 import ProtectedRoute from "@/components/ProtectedRout";
 import { useEffect } from "react";
 
-useEffect(() => {
-  const pingBackend = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/health`);
-      const data = await res.json();
-      console.log("Backend warmed up:", data);
-    } catch (error) {
-      console.error("Error warming up backend:", error);
-    }
-  };
-
-  pingBackend();
-}, []);
-
 function App() {
+
+  useEffect(() => {
+    const pingBackend = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/health`);
+        const data = await res.json();
+        console.log("Backend warmed up:", data);
+      } catch (error) {
+        console.error("Error warming up backend:", error);
+      }
+    };
+    pingBackend();
+  }, []);
+
   return (
     <AuthProvider>
         <Switch>
