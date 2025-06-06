@@ -176,7 +176,7 @@ export default function Events() {
                           <div key={match.id} className="px-6 py-8">
                             <div className="flex flex-col lg:flex-row lg:items-center gap-6">
                               {/* Fighters, Predicted Winner, and Match Info Section */}
-                              <div className="flex items-center gap-6 flex-shrink-0">
+                              <div className="flex flex-col sm:flex-row items-center gap-4 flex-shrink-0 w-full lg:w-auto">
                                 {/* Fighters Side-by-Side with VS */}
                                 <div className="flex items-center gap-4">
                                   <div className="flex flex-col items-center">
@@ -203,10 +203,9 @@ export default function Events() {
                                     </div>
                                   </div>
                                 </div>
-
                                 {/* Predicted Winner Column */}
                                 {match.prediction_data?.predictedWinner && (
-                                  <div className="flex flex-col items-center gap-2 ml-8">
+                                  <div className="flex flex-col items-center gap-2 lg:ml-8 mt-4 sm:mt-0">
                                     <div className="text-[#9CA3AF] text-sm font-medium">
                                       Predicted Winner
                                     </div>
@@ -215,9 +214,8 @@ export default function Events() {
                                     </div>
                                   </div>
                                 )}
-
-                                {/* Match Info - Weight Class and Result with Equal Width */}
-                                <div className="flex flex-col items-center gap-2 ml-8">
+                                {/* Match Info - Weight Class and Result */}
+                                <div className="flex flex-col items-center gap-2 lg:ml-8 mt-4 sm:mt-0">
                                   {match.weightclass && (
                                     <div className="text-xs font-medium px-3 py-1 rounded-full bg-[#FFB84D]/20 text-[#FFB84D] min-w-[80px] text-center">
                                       {match.weightclass}
@@ -234,11 +232,11 @@ export default function Events() {
                                 </div>
                               </div>
 
-                              {/* Metrics Section with Separate Fighter Names Column */}
+                              {/* Metrics Section */}
                               {match.prediction_data && (
-                                <div className="flex items-center gap-4 ml-auto">
+                                <div className="flex flex-col sm:flex-row items-center gap-4 w-full mt-6 lg:mt-0 lg:ml-auto">
                                   {/* Fighter Names Column */}
-                                  <div className="flex flex-col items-end gap-2 min-w-[80px]">
+                                  <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2 min-w-[80px]">
                                     <div className="h-6"></div> {/* Spacer for header */}
                                     <div className="text-[#9CA3AF] text-s text-right py-1">
                                       {getLastName(match.fighter1)}
@@ -247,9 +245,8 @@ export default function Events() {
                                       {getLastName(match.fighter2)}
                                     </div>
                                   </div>
-
                                   {/* Metrics Grid */}
-                                  <div className="grid grid-cols-3 gap-6">
+                                  <div className="grid grid-cols-3 gap-2 sm:gap-6 w-full">
                                     <div className="text-center">
                                       <div className="text-[#9CA3AF] text-sm mb-3 flex items-center justify-center font-medium">
                                         <BarChart className="h-4 w-4 mr-2" />
@@ -264,7 +261,6 @@ export default function Events() {
                                         </div>
                                       </div>
                                     </div>
-
                                     <div className="text-center">
                                       <div className="text-[#9CA3AF] text-sm mb-3 flex items-center justify-center font-medium">
                                         <DollarSign className="h-4 w-4 mr-2" />
@@ -279,7 +275,6 @@ export default function Events() {
                                         </div>
                                       </div>
                                     </div>
-
                                     <div className="text-center">
                                       <div className="text-[#9CA3AF] text-sm mb-3 flex items-center justify-center font-medium">
                                         <TrendingUp className="h-4 w-4 mr-2" />
@@ -309,7 +304,7 @@ export default function Events() {
                                   </div>
                                 </div>
                               )}
-
+                              {/* Expand/Collapse Button for Desktop */}
                               <div className="ml-4 hidden lg:block flex-shrink-0">
                                 <Button
                                   variant="ghost"
@@ -325,7 +320,7 @@ export default function Events() {
                                 </Button>
                               </div>
                             </div>
-
+                            {/* Expand/Collapse Button for Mobile */}
                             <div className="mt-4 flex justify-center lg:hidden">
                               <Button
                                 variant="outline"
@@ -345,7 +340,7 @@ export default function Events() {
                                 )}
                               </Button>
                             </div>
-
+                            {/* Expanded Details */}
                             {expandedMatches[match.id] && match.prediction_data && (
                               <div className="mt-6 bg-[#182030] rounded-lg p-6 animate-in fade-in slide-in-from-top-5 duration-300">
                                 <div className="space-y-6">
@@ -383,7 +378,6 @@ export default function Events() {
                                       </div>
                                     </div>
                                   )}
-
                                   {/* Feature Importance Graph Only */}
                                   {match.prediction_data.shapPlot && (
                                     <div>
